@@ -1,0 +1,20 @@
+# Segredos
+.env
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Dados baixados pelo ETL
+data/
+
+# Node
+node_modules/
+
+# Documento do TCC (binario Word)
+TCC I.docx
+
+# Configuracao local do Claude Code
+.claude/
