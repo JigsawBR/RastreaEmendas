@@ -45,3 +45,46 @@ def read_por_favorecido(zip_path: Path) -> pd.DataFrame:
         with zf.open("EmendasParlamentares_PorFavorecido.csv") as fh:
             wrapped = TextIOWrapper(fh, encoding="latin-1", newline="")
             return pd.read_csv(wrapped, sep=";", dtype=str, keep_default_na=False)
+
+
+DESPESAS_DIR = config.RAW_DATA_DIR / "despesas"
+
+
+def download_despesas_zip(year: int, month: int) -> Path:
+    DESPESAS_DIR.mkdir(parents=True, exist_ok=True)
+    aaaamm = f"{year:04d}{month:02d}"
+    local = DESPESAS_DIR / f"despesas_{aaaamm}.zip"
+    if local.exists() and local.stat().st_size > 0:
+        return local
+    url = f"{OPENDATA_BASE}/despesas-execucao/{aaaamm}"
+    logger.info("Downloading %s", url)
+    with requests.get(url, headers=UA, timeout=180, stream=True) as r:
+        r.raise_for_status()
+        with local.open("wb") as fh:
+            for chunk in r.iter_content(chunk_size=1 << 16):
+                fh.write(chunk)
+    logger.info("Saved %s (%d bytes)", local, local.stat().st_size)
+    return local
+
+
+def read_despesas(zip_path: Path, uf: str | None = None, only_emenda: bool = True) -> pd.DataFrame:
+    """Le o CSV mensal do zip, filtrando ja no chunking para conter memoria."""
+    with zipfile.ZipFile(zip_path) as zf:
+        csv_name = next(n for n in zf.namelist() if n.endswith("_Despesas.csv"))
+        with zf.open(csv_name) as fh:
+            wrapped = TextIOWrapper(fh, encoding="latin-1", newline="")
+            chunks = []
+            for chunk in pd.read_csv(
+                wrapped, sep=";", dtype=str, keep_default_na=False,
+                chunksize=50_000,
+            ):
+                if uf:
+                    chunk = chunk[chunk["UF"] == uf]
+                if only_emenda:
+                    chunk = chunk[chunk["Nome Autor Emenda"] != "SEM EMENDA"]
+                    chunk = chunk[chunk["Nome Autor Emenda"] != ""]
+                if not chunk.empty:
+                    chunks.append(chunk)
+            if not chunks:
+                return pd.DataFrame()
+            return pd.concat(chunks, ignore_index=True)

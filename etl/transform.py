@@ -112,6 +112,104 @@ def transform_transferegov_empenho(raw: dict) -> dict:
     }
 
 
+def transform_emenda_estadual(raw: dict) -> dict:
+    return {
+        "ano": int(raw["ano"]),
+        "numero_emenda": raw.get("emenda"),
+        "prioridade": _int_or_none(raw.get("prioridade")),
+        "nome_deputado": raw.get("nomeDeputado"),
+        "tipo": raw.get("tipo"),
+        "secretaria": raw.get("secretaria"),
+        "objeto": raw.get("objeto"),
+        "beneficiario_final": raw.get("beneficiarioFinal"),
+        "tipo_entidade": raw.get("tipoEntidade"),
+        "valor": _decimal_or_none(raw.get("valor")),
+        "data_envio": _iso_date_or_none(raw.get("dataEnvio")),
+        "parecer_seplag": raw.get("parecerSeplag"),
+        "data_parecer_seplag": _iso_date_or_none(raw.get("dataParecerSeplag")),
+        "parecer_secretario_seplag": raw.get("parecerSecretarioSeplag"),
+        "data_parecer_secretario_seplag": _iso_date_or_none(raw.get("dataParecerSecretarioSeplag")),
+        "cronograma_sefaz": raw.get("cronogramaSefaz"),
+        "data_cronograma_sefaz": _iso_date_or_none(raw.get("dataCronogramaSefaz")),
+        "parecer_secretario_sefaz": raw.get("parecerSecretarioSefaz"),
+        "data_parecer_secretario_sefaz": _iso_date_or_none(raw.get("dataParecerSecretarioSefaz")),
+    }
+
+
+def transform_emenda_estadual_execucao(raw: dict) -> dict:
+    return {
+        "ano": int(raw["ano"]),
+        "numero_emenda": raw.get("emenda"),
+        "codigo_orgao": str(raw["codigoOrgao"]) if raw.get("codigoOrgao") is not None else None,
+        "nome_orgao": raw.get("nomeOrgao"),
+        "nome_autor": raw.get("nomeAutor"),
+        "unidade_orcamentaria": raw.get("unidadeOrcamentaria"),
+        "funcao": raw.get("funcao"),
+        "subfuncao": raw.get("subfuncao"),
+        "programa": raw.get("programa"),
+        "acao": raw.get("acao"),
+        "natureza_despesa": raw.get("naturezaDespesa"),
+        "fonte_recurso": raw.get("fonteRecurso"),
+        "categoria_economica": raw.get("categoriaEconomica"),
+        "grupo_despesa": raw.get("grupoDespesa"),
+        "modalidade_aplicacao": raw.get("modalidadeAplicacao"),
+        "elemento_despesa": raw.get("elementoDespesa"),
+        "valor_emenda": _decimal_or_none(raw.get("valorEmenda")),
+        "valor_empenhado": _decimal_or_none(raw.get("valorEmpenhado")),
+        "valor_liquidado": _decimal_or_none(raw.get("valorLiquidado")),
+        "valor_pago": _decimal_or_none(raw.get("valorPago")),
+    }
+
+
+def transform_despesa_mensal(row: dict) -> dict:
+    def get(*keys):
+        for k in keys:
+            v = row.get(k)
+            if v not in (None, ""):
+                return v
+        return None
+
+    return {
+        "ano_mes": row.get("Ano e mês do lançamento"),
+        "codigo_orgao_superior": get("Código Órgão Superior"),
+        "nome_orgao_superior": get("Nome Órgão Superior"),
+        "codigo_orgao": get("Código Órgão Subordinado"),
+        "nome_orgao": get("Nome Órgão Subordinado"),
+        "codigo_unidade_gestora": get("Código Unidade Gestora"),
+        "nome_unidade_gestora": get("Nome Unidade Gestora"),
+        "codigo_unidade_orcamentaria": get("Código Unidade Orçamentária"),
+        "nome_unidade_orcamentaria": get("Nome Unidade Orçamentária"),
+        "codigo_funcao": get("Código Função"),
+        "nome_funcao": get("Nome Função"),
+        "codigo_subfuncao": get("Código Subfução", "Código Subfunção"),
+        "nome_subfuncao": get("Nome Subfunção"),
+        "codigo_programa": get("Código Programa Orçamentário"),
+        "nome_programa": get("Nome Programa Orçamentário"),
+        "codigo_acao": get("Código Ação"),
+        "nome_acao": get("Nome Ação"),
+        "uf": get("UF"),
+        "municipio": get("Município"),
+        "codigo_subtitulo": get("Código Subtítulo"),
+        "nome_subtitulo": get("Nome Subtítulo"),
+        "codigo_autor_emenda": get("Código Autor Emenda"),
+        "nome_autor_emenda": get("Nome Autor Emenda"),
+        "codigo_categoria_economica": get("Código Categoria Econômica"),
+        "nome_categoria_economica": get("Nome Categoria Econômica"),
+        "codigo_grupo_despesa": get("Código Grupo de Despesa"),
+        "nome_grupo_despesa": get("Nome Grupo de Despesa"),
+        "codigo_elemento_despesa": get("Código Elemento de Despesa"),
+        "nome_elemento_despesa": get("Nome Elemento de Despesa"),
+        "codigo_modalidade": get("Código Modalidade da Despesa"),
+        "nome_modalidade": get("Modalidade da Despesa"),
+        "valor_empenhado": parse_brl(get("Valor Empenhado (R$)")),
+        "valor_liquidado": parse_brl(get("Valor Liquidado (R$)")),
+        "valor_pago": parse_brl(get("Valor Pago (R$)")),
+        "valor_restos_inscritos": parse_brl(get("Valor Restos a Pagar Inscritos (R$)")),
+        "valor_restos_cancelado": parse_brl(get("Valor Restos a Pagar Cancelado (R$)")),
+        "valor_restos_pagos": parse_brl(get("Valor Restos a Pagar Pagos (R$)")),
+    }
+
+
 def transform_favorecido(row: dict) -> dict | None:
     codigo_emenda = (row.get("Código da Emenda") or "").strip()
     ano_mes = (row.get("Ano/Mês") or "").strip()
