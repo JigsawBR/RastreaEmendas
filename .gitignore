@@ -18,3 +18,7 @@ TCC I.docx
 
 # Configuracao local do Claude Code
 .claude/
+
+# Instrucoes/contexto para assistentes de IA (uso local)
+CLAUDE.md
+AGENTS.md
