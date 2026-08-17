@@ -73,6 +73,8 @@ def _parse_valor(v) -> object:
 
 
 def transform_detalhe(codigo: str, raw: dict) -> dict:
+    # ufFavorecido pode vir "Sem Informação"; so persiste siglas de 2 letras
+    uf = (raw.get("ufFavorecido") or "").strip()
     return {
         "codigo_documento": codigo,
         "observacao": raw.get("observacao") or None,
@@ -81,7 +83,7 @@ def transform_detalhe(codigo: str, raw: dict) -> dict:
         "funcao": raw.get("funcao") or None,
         "codigo_favorecido": raw.get("codigoFavorecido") or None,
         "nome_favorecido": (raw.get("nomeFavorecido") or None),
-        "uf_favorecido": raw.get("ufFavorecido") or None,
+        "uf_favorecido": uf if len(uf) == 2 else None,
         "valor_documento": _parse_valor(raw.get("valor")),
     }
 
