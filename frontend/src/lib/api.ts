@@ -120,6 +120,13 @@ export type MunicipiosResponse = {
     valorEmpenhado: number;
     valorLiquidado: number;
     valorPago: number;
+    autoresDespesa: number;
+    despesaEmpenhado: number;
+    despesaLiquidado: number;
+    despesaPago: number;
+    planosTransferegov: number;
+    parlamentaresTransferegov: number;
+    transferegovValor: number;
   }[];
 };
 
