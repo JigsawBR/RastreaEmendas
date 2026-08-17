@@ -15,8 +15,9 @@ node_modules/
 dist/
 *.tsbuildinfo
 
-# Documento do TCC (binario Word)
+# Documento do TCC (binarios)
 TCC I.docx
+tcc1_final_word.pdf
 
 # Configuracao local do Claude Code
 .claude/
