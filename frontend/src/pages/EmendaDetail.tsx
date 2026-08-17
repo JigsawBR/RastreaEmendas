@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useParams } from "react-router-dom";
 import { api } from "../lib/api";
@@ -116,20 +117,27 @@ export default function EmendaDetail() {
                     <th className="pb-1">Documento</th>
                     <th className="pb-1">Data</th>
                     <th className="pb-1">UG</th>
-                    <th className="pb-1">Especie</th>
-                    <th className="pb-1 text-right">Empenhado</th>
-                    <th className="pb-1 text-right">Pago</th>
+                    <th className="pb-1">Favorecido</th>
+                    <th className="pb-1 text-right">Valor</th>
                   </tr></thead>
                   <tbody>
                     {est.documentos.map((d) => (
-                      <tr key={d.codigoDocumento} className="border-t border-slate-100">
-                        <td className="py-1 font-mono">{d.codigoDocumentoResumido ?? d.codigoDocumento}</td>
-                        <td className="py-1">{formatDate(d.data)}</td>
-                        <td className="py-1 font-mono" title={d.nomeOrgaoExecutor ?? undefined}>{d.orgaoExecutor ?? "—"}</td>
-                        <td className="py-1">{d.especieTipo ?? "—"}</td>
-                        <td className="py-1 text-right">{d.valorEmpenhado ? formatBRL(d.valorEmpenhado) : "—"}</td>
-                        <td className="py-1 text-right">{d.valorPago ? formatBRL(d.valorPago) : "—"}</td>
-                      </tr>
+                      <Fragment key={d.codigoDocumento}>
+                        <tr className="border-t border-slate-100">
+                          <td className="py-1 font-mono">{d.codigoDocumentoResumido ?? d.codigoDocumento}</td>
+                          <td className="py-1">{formatDate(d.data)}</td>
+                          <td className="py-1 font-mono" title={d.nomeOrgaoExecutor ?? undefined}>{d.orgaoExecutor ?? "—"}</td>
+                          <td className="py-1">{d.nomeFavorecido ?? "—"}</td>
+                          <td className="py-1 text-right">{d.valorDocumento != null ? formatBRL(d.valorDocumento) : "—"}</td>
+                        </tr>
+                        {d.observacao && (
+                          <tr>
+                            <td colSpan={5} className="pb-1 text-[11px] text-slate-500 italic">
+                              {d.observacao}
+                            </td>
+                          </tr>
+                        )}
+                      </Fragment>
                     ))}
                   </tbody>
                 </table>

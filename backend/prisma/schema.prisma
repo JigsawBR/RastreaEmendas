@@ -69,6 +69,13 @@ model documento_despesa {
   funcao                    String?   @db.VarChar(60)
   valor_empenhado           Decimal?  @db.Decimal(15, 2)
   valor_pago                Decimal?  @db.Decimal(15, 2)
+  observacao                String?
+  programa                  String?
+  acao                      String?
+  codigo_favorecido         String?   @db.VarChar(20)
+  nome_favorecido           String?   @db.VarChar(200)
+  uf_favorecido             String?   @db.VarChar(2)
+  valor_documento           Decimal?  @db.Decimal(15, 2)
   emenda                    emenda    @relation(fields: [codigo_emenda], references: [codigo_emenda], onDelete: NoAction, onUpdate: NoAction)
 
   @@id([codigo_documento, codigo_emenda])

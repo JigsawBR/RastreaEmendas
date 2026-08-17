@@ -76,6 +76,11 @@ export type CadeiaResponse = {
       orgaoExecutor: string | null;
       nomeOrgaoExecutor: string | null;
       funcao: string | null;
+      observacao: string | null;
+      programa: string | null;
+      acao: string | null;
+      nomeFavorecido: string | null;
+      valorDocumento: number | null;
       valorEmpenhado: number | null;
       valorPago: number | null;
     }[];

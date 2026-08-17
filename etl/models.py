@@ -266,8 +266,16 @@ class DocumentoDespesa(Base):
     codigo_documento_resumido: Mapped[str | None] = mapped_column(String(20))
     especie_tipo: Mapped[str | None] = mapped_column(String(60))
     orgao_executor: Mapped[str | None] = mapped_column(String(6), index=True)
-    # preenchidos futuramente a partir dos arquivos de dados abertos,
-    # pois a API de documentos nao retorna funcao nem valores
+    # preenchidos pelo enriquecimento via /despesas/documentos/{codigo}
+    # (etl.enrich_documentos); a listagem de documentos da emenda nao traz
+    # funcao, valores nem observacao
     funcao: Mapped[str | None] = mapped_column(String(60))
     valor_empenhado: Mapped[Decimal | None] = mapped_column(Numeric(15, 2))
     valor_pago: Mapped[Decimal | None] = mapped_column(Numeric(15, 2))
+    observacao: Mapped[str | None] = mapped_column(Text)
+    programa: Mapped[str | None] = mapped_column(Text)
+    acao: Mapped[str | None] = mapped_column(Text)
+    codigo_favorecido: Mapped[str | None] = mapped_column(String(20), index=True)
+    nome_favorecido: Mapped[str | None] = mapped_column(String(200))
+    uf_favorecido: Mapped[str | None] = mapped_column(String(2))
+    valor_documento: Mapped[Decimal | None] = mapped_column(Numeric(15, 2))

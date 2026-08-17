@@ -147,6 +147,11 @@ emendasRouter.get("/:codigo/cadeia", async (req, res) => {
           ? nomesUg.get(d.orgao_executor) ?? null
           : null,
         funcao: d.funcao,
+        observacao: d.observacao,
+        programa: d.programa,
+        acao: d.acao,
+        nomeFavorecido: d.nome_favorecido,
+        valorDocumento: d.valor_documento ? Number(d.valor_documento) : null,
         valorEmpenhado: d.valor_empenhado ? Number(d.valor_empenhado) : null,
         valorPago: d.valor_pago ? Number(d.valor_pago) : null,
       })),
