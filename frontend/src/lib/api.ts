@@ -74,6 +74,7 @@ export type CadeiaResponse = {
       data: string | null;
       especieTipo: string | null;
       orgaoExecutor: string | null;
+      nomeOrgaoExecutor: string | null;
       funcao: string | null;
       valorEmpenhado: number | null;
       valorPago: number | null;
@@ -91,6 +92,7 @@ export type DistribuicaoResponse = {
   }[];
   porOrgao: {
     orgaoExecutor: string;
+    nomeOrgao: string | null;
     quantidade: number;
     empenhado: number;
     pago: number;

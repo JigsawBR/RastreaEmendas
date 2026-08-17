@@ -81,7 +81,7 @@ export default function EmendaDetail() {
             <h2 className="font-semibold mb-3">Por orgao executor (UG)</h2>
             <table className="w-full text-sm">
               <thead className="text-slate-500 text-left"><tr>
-                <th className="pb-2">UG</th>
+                <th className="pb-2">Unidade gestora</th>
                 <th className="pb-2 text-right">Docs</th>
                 <th className="pb-2 text-right">Empenhado</th>
                 <th className="pb-2 text-right">Pago</th>
@@ -89,7 +89,10 @@ export default function EmendaDetail() {
               <tbody>
                 {dist.data.porOrgao.map((o) => (
                   <tr key={o.orgaoExecutor} className="border-t border-slate-100">
-                    <td className="py-2 font-mono text-xs">{o.orgaoExecutor}</td>
+                    <td className="py-2">
+                      {o.nomeOrgao ?? "—"}
+                      <span className="block font-mono text-xs text-slate-500">{o.orgaoExecutor}</span>
+                    </td>
                     <td className="py-2 text-right">{o.quantidade}</td>
                     <td className="py-2 text-right">{formatBRL(o.empenhado)}</td>
                     <td className="py-2 text-right">{formatBRL(o.pago)}</td>
@@ -122,7 +125,7 @@ export default function EmendaDetail() {
                       <tr key={d.codigoDocumento} className="border-t border-slate-100">
                         <td className="py-1 font-mono">{d.codigoDocumentoResumido ?? d.codigoDocumento}</td>
                         <td className="py-1">{formatDate(d.data)}</td>
-                        <td className="py-1 font-mono">{d.orgaoExecutor ?? "—"}</td>
+                        <td className="py-1 font-mono" title={d.nomeOrgaoExecutor ?? undefined}>{d.orgaoExecutor ?? "—"}</td>
                         <td className="py-1">{d.especieTipo ?? "—"}</td>
                         <td className="py-1 text-right">{d.valorEmpenhado ? formatBRL(d.valorEmpenhado) : "—"}</td>
                         <td className="py-1 text-right">{d.valorPago ? formatBRL(d.valorPago) : "—"}</td>

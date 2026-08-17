@@ -236,6 +236,24 @@ class DespesaMensal(Base):
     valor_restos_pagos: Mapped[Decimal | None] = mapped_column(Numeric(15, 2))
 
 
+class UnidadeGestora(Base):
+    """Cadastro de UGs do SIAFI (Tesouro Transparente, atualizacao mensal).
+
+    Resolve o codigo de 6 digitos extraido do codigoDocumento para o nome
+    da unidade e do orgao, ja que a API de documentos da CGU nao os fornece.
+    """
+
+    __tablename__ = "unidade_gestora"
+
+    codigo: Mapped[str] = mapped_column(String(6), primary_key=True)
+    nome: Mapped[str | None] = mapped_column(String(200))
+    uf: Mapped[str | None] = mapped_column(String(2), index=True)
+    codigo_orgao: Mapped[str | None] = mapped_column(String(10), index=True)
+    nome_orgao: Mapped[str | None] = mapped_column(String(200))
+    funcao: Mapped[str | None] = mapped_column(String(30))
+    ativo: Mapped[str | None] = mapped_column(String(5))
+
+
 class DocumentoDespesa(Base):
     __tablename__ = "documento_despesa"
 

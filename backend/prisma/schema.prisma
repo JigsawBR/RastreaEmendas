@@ -232,3 +232,16 @@ model transferegov_plano_acao {
   @@index([numero_emenda], map: "ix_transferegov_plano_acao_numero_emenda")
   @@index([uf_beneficiario], map: "ix_transferegov_plano_acao_uf_beneficiario")
 }
+
+model unidade_gestora {
+  codigo       String  @id @db.VarChar(6)
+  nome         String? @db.VarChar(200)
+  uf           String? @db.VarChar(2)
+  codigo_orgao String? @db.VarChar(10)
+  nome_orgao   String? @db.VarChar(200)
+  funcao       String? @db.VarChar(30)
+  ativo        String? @db.VarChar(5)
+
+  @@index([codigo_orgao], map: "ix_unidade_gestora_codigo_orgao")
+  @@index([uf], map: "ix_unidade_gestora_uf")
+}

@@ -2,6 +2,7 @@ import { Router } from "express";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "../lib/prisma.js";
 import { pbLocalidadeFilter } from "../lib/filters.js";
+import { ugNameMap } from "../lib/ugs.js";
 
 export const emendasRouter = Router();
 
@@ -124,6 +125,8 @@ emendasRouter.get("/:codigo/cadeia", async (req, res) => {
     (porEstagio[key] ??= []).push(d);
   }
 
+  const nomesUg = await ugNameMap(documentos.map((d) => d.orgao_executor));
+
   res.json({
     codigoEmenda: codigo,
     totalDocumentos: documentos.length,
@@ -140,6 +143,9 @@ emendasRouter.get("/:codigo/cadeia", async (req, res) => {
         data: d.data,
         especieTipo: d.especie_tipo,
         orgaoExecutor: d.orgao_executor,
+        nomeOrgaoExecutor: d.orgao_executor
+          ? nomesUg.get(d.orgao_executor) ?? null
+          : null,
         funcao: d.funcao,
         valorEmpenhado: d.valor_empenhado ? Number(d.valor_empenhado) : null,
         valorPago: d.valor_pago ? Number(d.valor_pago) : null,
@@ -179,13 +185,19 @@ emendasRouter.get("/:codigo/distribuicao", async (req, res) => {
     porOrgao.set(key, acc);
   }
 
+  const nomesUg = await ugNameMap([...porOrgao.keys()]);
+
   res.json({
     codigoEmenda: codigo,
     porFuncao: Array.from(porFuncao.entries())
       .map(([funcao, v]) => ({ funcao, ...v }))
       .sort((a, b) => b.empenhado - a.empenhado),
     porOrgao: Array.from(porOrgao.entries())
-      .map(([orgaoExecutor, v]) => ({ orgaoExecutor, ...v }))
+      .map(([orgaoExecutor, v]) => ({
+        orgaoExecutor,
+        nomeOrgao: nomesUg.get(orgaoExecutor) ?? null,
+        ...v,
+      }))
       .sort((a, b) => b.empenhado - a.empenhado),
   });
 });
