@@ -12,6 +12,8 @@ data/
 
 # Node
 node_modules/
+dist/
+*.tsbuildinfo
 
 # Documento do TCC (binario Word)
 TCC I.docx

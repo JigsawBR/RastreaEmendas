@@ -1,0 +1,234 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model despesa_mensal {
+  id                          Int      @id @default(autoincrement())
+  ano_mes                     String   @db.VarChar(7)
+  codigo_orgao_superior       String?  @db.VarChar(10)
+  nome_orgao_superior         String?
+  codigo_orgao                String?  @db.VarChar(10)
+  nome_orgao                  String?
+  codigo_unidade_gestora      String?  @db.VarChar(10)
+  nome_unidade_gestora        String?
+  codigo_unidade_orcamentaria String?  @db.VarChar(10)
+  nome_unidade_orcamentaria   String?
+  codigo_funcao               String?  @db.VarChar(10)
+  nome_funcao                 String?  @db.VarChar(120)
+  codigo_subfuncao            String?  @db.VarChar(10)
+  nome_subfuncao              String?
+  codigo_programa             String?  @db.VarChar(20)
+  nome_programa               String?
+  codigo_acao                 String?  @db.VarChar(20)
+  nome_acao                   String?
+  uf                          String?  @db.VarChar(2)
+  municipio                   String?
+  codigo_subtitulo            String?  @db.VarChar(20)
+  nome_subtitulo              String?
+  codigo_autor_emenda         String?  @db.VarChar(20)
+  nome_autor_emenda           String?
+  codigo_categoria_economica  String?  @db.VarChar(10)
+  nome_categoria_economica    String?
+  codigo_grupo_despesa        String?  @db.VarChar(10)
+  nome_grupo_despesa          String?
+  codigo_elemento_despesa     String?  @db.VarChar(10)
+  nome_elemento_despesa       String?
+  codigo_modalidade           String?  @db.VarChar(10)
+  nome_modalidade             String?
+  valor_empenhado             Decimal? @db.Decimal(15, 2)
+  valor_liquidado             Decimal? @db.Decimal(15, 2)
+  valor_pago                  Decimal? @db.Decimal(15, 2)
+  valor_restos_inscritos      Decimal? @db.Decimal(15, 2)
+  valor_restos_cancelado      Decimal? @db.Decimal(15, 2)
+  valor_restos_pagos          Decimal? @db.Decimal(15, 2)
+
+  @@index([ano_mes], map: "ix_despesa_mensal_ano_mes")
+  @@index([codigo_autor_emenda], map: "ix_despesa_mensal_codigo_autor_emenda")
+  @@index([codigo_unidade_gestora], map: "ix_despesa_mensal_codigo_unidade_gestora")
+  @@index([municipio], map: "ix_despesa_mensal_municipio")
+  @@index([nome_autor_emenda], map: "ix_despesa_mensal_nome_autor_emenda")
+  @@index([nome_funcao], map: "ix_despesa_mensal_nome_funcao")
+  @@index([nome_orgao], map: "ix_despesa_mensal_nome_orgao")
+  @@index([nome_orgao_superior], map: "ix_despesa_mensal_nome_orgao_superior")
+  @@index([uf], map: "ix_despesa_mensal_uf")
+}
+
+model documento_despesa {
+  codigo_documento          String    @db.VarChar(30)
+  codigo_emenda             String    @db.VarChar(20)
+  data                      DateTime? @db.Date
+  estagio                   String?   @db.VarChar(20)
+  codigo_documento_resumido String?   @db.VarChar(20)
+  especie_tipo              String?   @db.VarChar(60)
+  orgao_executor            String?   @db.VarChar(6)
+  funcao                    String?   @db.VarChar(60)
+  valor_empenhado           Decimal?  @db.Decimal(15, 2)
+  valor_pago                Decimal?  @db.Decimal(15, 2)
+  emenda                    emenda    @relation(fields: [codigo_emenda], references: [codigo_emenda], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([codigo_documento, codigo_emenda])
+  @@index([estagio], map: "ix_documento_despesa_estagio")
+  @@index([orgao_executor], map: "ix_documento_despesa_orgao_executor")
+}
+
+model emenda {
+  codigo_emenda     String              @id @db.VarChar(20)
+  ano               Int
+  tipo_emenda       String?             @db.VarChar(80)
+  autor             String?             @db.VarChar(120)
+  nome_autor        String?             @db.VarChar(120)
+  numero_emenda     String?             @db.VarChar(10)
+  documento_despesa documento_despesa[]
+  emenda_alocacao   emenda_alocacao[]
+
+  @@index([ano], map: "ix_emenda_ano")
+  @@index([nome_autor], map: "ix_emenda_nome_autor")
+}
+
+model emenda_alocacao {
+  id                    Int      @id @default(autoincrement())
+  codigo_emenda         String   @db.VarChar(20)
+  localidade_gasto      String   @db.VarChar(120)
+  funcao                String   @db.VarChar(60)
+  subfuncao             String   @db.VarChar(60)
+  valor_empenhado       Decimal? @db.Decimal(15, 2)
+  valor_liquidado       Decimal? @db.Decimal(15, 2)
+  valor_pago            Decimal? @db.Decimal(15, 2)
+  valor_resto_inscrito  Decimal? @db.Decimal(15, 2)
+  valor_resto_cancelado Decimal? @db.Decimal(15, 2)
+  valor_resto_pago      Decimal? @db.Decimal(15, 2)
+  emenda                emenda   @relation(fields: [codigo_emenda], references: [codigo_emenda], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([codigo_emenda, localidade_gasto, funcao, subfuncao], map: "uq_emenda_alocacao_grain")
+  @@index([codigo_emenda], map: "ix_emenda_alocacao_codigo_emenda")
+  @@index([funcao], map: "ix_emenda_alocacao_funcao")
+  @@index([localidade_gasto], map: "ix_emenda_alocacao_localidade_gasto")
+}
+
+model emenda_estadual {
+  id                             Int       @id @default(autoincrement())
+  ano                            Int
+  numero_emenda                  String    @db.VarChar(20)
+  prioridade                     Int?
+  nome_deputado                  String?   @db.VarChar(120)
+  tipo                           String?   @db.VarChar(30)
+  secretaria                     String?   @db.VarChar(200)
+  objeto                         String?   @db.VarChar(1000)
+  beneficiario_final             String?   @db.VarChar(200)
+  tipo_entidade                  String?   @db.VarChar(120)
+  valor                          Decimal?  @db.Decimal(15, 2)
+  data_envio                     DateTime? @db.Date
+  parecer_seplag                 String?   @db.VarChar(2000)
+  data_parecer_seplag            DateTime? @db.Date
+  parecer_secretario_seplag      String?   @db.VarChar(500)
+  data_parecer_secretario_seplag DateTime? @db.Date
+  cronograma_sefaz               String?   @db.VarChar(2000)
+  data_cronograma_sefaz          DateTime? @db.Date
+  parecer_secretario_sefaz       String?   @db.VarChar(500)
+  data_parecer_secretario_sefaz  DateTime? @db.Date
+
+  @@unique([ano, numero_emenda], map: "uq_emenda_estadual")
+  @@index([ano], map: "ix_emenda_estadual_ano")
+  @@index([nome_deputado], map: "ix_emenda_estadual_nome_deputado")
+  @@index([numero_emenda], map: "ix_emenda_estadual_numero_emenda")
+  @@index([secretaria], map: "ix_emenda_estadual_secretaria")
+}
+
+model emenda_estadual_execucao {
+  id                   Int      @id @default(autoincrement())
+  ano                  Int
+  numero_emenda        String   @db.VarChar(20)
+  codigo_orgao         String?  @db.VarChar(10)
+  nome_orgao           String?  @db.VarChar(200)
+  nome_autor           String?  @db.VarChar(120)
+  unidade_orcamentaria String?  @db.VarChar(200)
+  funcao               String?  @db.VarChar(120)
+  subfuncao            String?  @db.VarChar(120)
+  programa             String?  @db.VarChar(200)
+  acao                 String?  @db.VarChar(200)
+  natureza_despesa     String?  @db.VarChar(120)
+  fonte_recurso        String?  @db.VarChar(120)
+  categoria_economica  String?  @db.VarChar(60)
+  grupo_despesa        String?  @db.VarChar(60)
+  modalidade_aplicacao String?  @db.VarChar(60)
+  elemento_despesa     String?  @db.VarChar(120)
+  valor_emenda         Decimal? @db.Decimal(15, 2)
+  valor_empenhado      Decimal? @db.Decimal(15, 2)
+  valor_liquidado      Decimal? @db.Decimal(15, 2)
+  valor_pago           Decimal? @db.Decimal(15, 2)
+
+  @@index([ano], map: "ix_emenda_estadual_execucao_ano")
+  @@index([codigo_orgao], map: "ix_emenda_estadual_execucao_codigo_orgao")
+  @@index([funcao], map: "ix_emenda_estadual_execucao_funcao")
+  @@index([nome_orgao], map: "ix_emenda_estadual_execucao_nome_orgao")
+  @@index([numero_emenda], map: "ix_emenda_estadual_execucao_numero_emenda")
+}
+
+model favorecido {
+  id_favorecido        Int      @id @default(autoincrement())
+  codigo_emenda        String   @db.VarChar(20)
+  ano_mes              String   @db.VarChar(6)
+  codigo_favorecido    String   @db.VarChar(20)
+  nome_favorecido      String?  @db.VarChar(200)
+  natureza_juridica    String?  @db.VarChar(120)
+  tipo_favorecido      String?  @db.VarChar(60)
+  uf_favorecido        String?  @db.VarChar(2)
+  municipio_favorecido String?  @db.VarChar(120)
+  valor_recebido       Decimal? @db.Decimal(15, 2)
+
+  @@unique([codigo_emenda, ano_mes, codigo_favorecido], map: "uq_favorecido_grain")
+  @@index([ano_mes], map: "ix_favorecido_ano_mes")
+  @@index([codigo_emenda], map: "ix_favorecido_codigo_emenda")
+  @@index([codigo_favorecido], map: "ix_favorecido_codigo_favorecido")
+  @@index([municipio_favorecido], map: "ix_favorecido_municipio_favorecido")
+  @@index([uf_favorecido], map: "ix_favorecido_uf_favorecido")
+}
+
+model transferegov_empenho {
+  id_empenho            Int       @id @default(autoincrement())
+  id_plano_acao         Int?
+  numero_empenho        String?   @db.VarChar(20)
+  data_emissao          DateTime? @db.Date
+  situacao              String?   @db.VarChar(60)
+  ug_emitente           String?   @db.VarChar(6)
+  descricao_ug_emitente String?   @db.VarChar(200)
+  cnpj_beneficiario     String?   @db.VarChar(20)
+  nome_beneficiario     String?   @db.VarChar(200)
+  uf_beneficiario       String?   @db.VarChar(2)
+  natureza_despesa      String?   @db.VarChar(20)
+  valor_empenho         Decimal?  @db.Decimal(15, 2)
+
+  @@index([cnpj_beneficiario], map: "ix_transferegov_empenho_cnpj_beneficiario")
+  @@index([data_emissao], map: "ix_transferegov_empenho_data_emissao")
+  @@index([id_plano_acao], map: "ix_transferegov_empenho_id_plano_acao")
+  @@index([numero_empenho], map: "ix_transferegov_empenho_numero_empenho")
+  @@index([uf_beneficiario], map: "ix_transferegov_empenho_uf_beneficiario")
+  @@index([ug_emitente], map: "ix_transferegov_empenho_ug_emitente")
+}
+
+model transferegov_plano_acao {
+  id_plano_acao       Int      @id @default(autoincrement())
+  codigo_plano_acao   String?  @db.VarChar(60)
+  ano_plano_acao      Int?
+  situacao_plano_acao String?  @db.VarChar(120)
+  cnpj_beneficiario   String?  @db.VarChar(20)
+  nome_beneficiario   String?  @db.VarChar(200)
+  uf_beneficiario     String?  @db.VarChar(2)
+  nome_parlamentar    String?  @db.VarChar(120)
+  ano_emenda          Int?
+  numero_emenda       String?  @db.VarChar(20)
+  valor_custeio       Decimal? @db.Decimal(15, 2)
+  valor_investimento  Decimal? @db.Decimal(15, 2)
+
+  @@index([ano_emenda], map: "ix_transferegov_plano_acao_ano_emenda")
+  @@index([ano_plano_acao], map: "ix_transferegov_plano_acao_ano_plano_acao")
+  @@index([cnpj_beneficiario], map: "ix_transferegov_plano_acao_cnpj_beneficiario")
+  @@index([nome_parlamentar], map: "ix_transferegov_plano_acao_nome_parlamentar")
+  @@index([numero_emenda], map: "ix_transferegov_plano_acao_numero_emenda")
+  @@index([uf_beneficiario], map: "ix_transferegov_plano_acao_uf_beneficiario")
+}
