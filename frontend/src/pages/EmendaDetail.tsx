@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link, useParams } from "react-router-dom";
 import { api } from "../lib/api";
 import { formatBRL, formatDate, formatPct } from "../lib/format";
+import DestinoDoDinheiro from "../components/DestinoDoDinheiro";
 
 export default function EmendaDetail() {
   const { codigo = "" } = useParams();
@@ -56,6 +57,8 @@ export default function EmendaDetail() {
           </div>
         </section>
       )}
+
+      <DestinoDoDinheiro codigoEmenda={codigo} />
 
       {dist.data && (
         <section className="grid grid-cols-1 md:grid-cols-2 gap-4">

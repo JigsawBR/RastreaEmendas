@@ -1,12 +1,26 @@
 import { Router } from "express";
-import { prisma } from "../lib/prisma.js";
-import { pbLocalidadeFilter } from "../lib/filters.js";
+import { pbLocalidadeFilter } from "../../amendments/infrastructure/amendment-filters.js";
+import { listFundingDestinations } from "../../execution/application/list-funding-destinations.js";
+import { prisma } from "../../../shared/infrastructure/database/prisma.js";
 
-export const resumoRouter = Router();
+export const analyticsRouter = Router();
+
+// GET /resumo/destino?ano=2024
+// Responde "para onde o dinheiro foi", que a localidade do gasto nao responde:
+// 75% do valor cai no balde "PARAÍBA (UF)", que nao e um municipio.
+analyticsRouter.get("/destino", async (req, res) => {
+  const ano = req.query.ano ? Number(req.query.ano) : undefined;
+  const grupos = await listFundingDestinations({ ano });
+  res.json({
+    ano: ano ?? null,
+    valorTotal: grupos.reduce((s, g) => s + g.valor, 0),
+    grupos,
+  });
+});
 
 // GET /resumo?ano=2024
 // Numeros gerais para o dashboard, restritos a PB via emenda_alocacao.
-resumoRouter.get("/", async (req, res) => {
+analyticsRouter.get("/", async (req, res) => {
   const ano = req.query.ano ? Number(req.query.ano) : undefined;
 
   const alocacoes = await prisma.emenda_alocacao.findMany({

@@ -130,10 +130,26 @@ export type MunicipiosResponse = {
   }[];
 };
 
+export type DestinoResponse = {
+  ano?: number | null;
+  codigoEmenda?: string;
+  valorTotal: number;
+  grupos: {
+    destino: string;
+    rotulo: string;
+    descricao: string;
+    documentos: number;
+    valor: number;
+    favorecidos: { nome: string; municipio: string | null; valor: number }[];
+  }[];
+};
+
 export const api = {
   resumo: (ano?: number) => get<Resumo>(`/resumo${ano ? `?ano=${ano}` : ""}`),
+  destino: (ano?: number) => get<DestinoResponse>(`/resumo/destino${ano ? `?ano=${ano}` : ""}`),
+  destinoEmenda: (codigo: string) => get<DestinoResponse>(`/emendas/${codigo}/destino`),
   emendas: (params: {
-    ano?: number; parlamentar?: string; municipio?: string; funcao?: string;
+    ano?: number; parlamentar?: string; municipio?: string; funcao?: string; orgao?: string;
     limit?: number; offset?: number;
   }) => {
     const qs = new URLSearchParams();
@@ -141,6 +157,7 @@ export const api = {
     if (params.parlamentar) qs.set("parlamentar", params.parlamentar);
     if (params.municipio) qs.set("municipio", params.municipio);
     if (params.funcao) qs.set("funcao", params.funcao);
+    if (params.orgao) qs.set("orgao", params.orgao);
     if (params.limit) qs.set("limit", String(params.limit));
     if (params.offset) qs.set("offset", String(params.offset));
     return get<EmendasListResponse>(`/emendas?${qs.toString()}`);
@@ -150,12 +167,13 @@ export const api = {
   distribuicao: (codigo: string) => get<DistribuicaoResponse>(`/emendas/${codigo}/distribuicao`),
   rastreabilidade: (codigo: string) => get<RastreabilidadeResponse>(`/emendas/${codigo}/rastreabilidade`),
   municipios: (ano?: number) => get<MunicipiosResponse>(`/municipios${ano ? `?ano=${ano}` : ""}`),
-  exportEmendasUrl: (params: { ano?: number; parlamentar?: string; municipio?: string; funcao?: string }) => {
+  exportEmendasUrl: (params: { ano?: number; parlamentar?: string; municipio?: string; funcao?: string; orgao?: string }) => {
     const qs = new URLSearchParams();
     if (params.ano) qs.set("ano", String(params.ano));
     if (params.parlamentar) qs.set("parlamentar", params.parlamentar);
     if (params.municipio) qs.set("municipio", params.municipio);
     if (params.funcao) qs.set("funcao", params.funcao);
+    if (params.orgao) qs.set("orgao", params.orgao);
     return `${BASE}/export/emendas?${qs.toString()}`;
   },
 };

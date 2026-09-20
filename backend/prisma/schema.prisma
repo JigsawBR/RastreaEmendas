@@ -76,9 +76,14 @@ model documento_despesa {
   nome_favorecido           String?   @db.VarChar(200)
   uf_favorecido             String?   @db.VarChar(2)
   valor_documento           Decimal?  @db.Decimal(15, 2)
+  natureza_favorecido       String?   @db.VarChar(120)
+  municipio_favorecido      String?   @db.VarChar(120)
+  destino_recurso           String?   @db.VarChar(30)
+  detalhe_atualizado_em     DateTime? @db.Timestamp(6)
   emenda                    emenda    @relation(fields: [codigo_emenda], references: [codigo_emenda], onDelete: NoAction, onUpdate: NoAction)
 
   @@id([codigo_documento, codigo_emenda])
+  @@index([destino_recurso], map: "ix_documento_despesa_destino_recurso")
   @@index([estagio], map: "ix_documento_despesa_estagio")
   @@index([orgao_executor], map: "ix_documento_despesa_orgao_executor")
 }
@@ -115,6 +120,14 @@ model emenda_alocacao {
   @@index([codigo_emenda], map: "ix_emenda_alocacao_codigo_emenda")
   @@index([funcao], map: "ix_emenda_alocacao_funcao")
   @@index([localidade_gasto], map: "ix_emenda_alocacao_localidade_gasto")
+}
+
+model correcao_alocacao {
+  codigo_emenda    String   @id @db.VarChar(20)
+  valor_corrompido Decimal  @db.Decimal(15, 2)
+  valor_corrigido  Decimal  @db.Decimal(15, 2)
+  empenhos         Int
+  criado_em        DateTime @db.Timestamp(6)
 }
 
 model emenda_estadual {

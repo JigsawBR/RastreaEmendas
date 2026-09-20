@@ -1,0 +1,46 @@
+sequenceDiagram
+  autonumber
+  actor U as Usuario (cidadao)
+  participant W as Front-end React<br/>(EmendaDetail)
+  participant A as Back-end Express<br/>(emendasRouter)
+  participant P as Prisma ORM
+  participant D as PostgreSQL
+  participant E as ETL Python<br/>(execucao previa)
+  participant C as API CGU
+
+  Note over E,C: Carga previa (assincrona, fora da requisicao)
+  E->>C: GET /emendas?ano (paginado, filtro PB no cliente)
+  C-->>E: emendas do Brasil (grao emenda x funcao x localidade)
+  E->>C: GET /emendas/documentos/{cod}
+  C-->>E: documentos (empenho, liquidacao, pagamento)
+  E->>C: GET /despesas/documentos/{cod}
+  C-->>E: objeto do gasto, favorecido, valor
+  E->>D: grava emenda, emenda_alocacao, documento_despesa
+
+  Note over U,D: Consulta em tempo real
+  U->>W: abre /emendas/{codigo}
+  par Requisicoes paralelas (React Query)
+    W->>A: GET /emendas/{codigo}
+    A->>P: findUnique(emenda) + alocacoes
+    P->>D: SELECT
+    D-->>P: linhas
+    P-->>A: entidade
+    A-->>W: totais empenhado/liquidado/pago
+  and
+    W->>A: GET /emendas/{codigo}/cadeia
+    A->>P: findMany(documento_despesa)
+    P->>D: SELECT
+    D-->>P: documentos
+    A->>P: ugNameMap(orgaos executores)
+    P->>D: SELECT unidade_gestora
+    D-->>P: nomes das UGs
+    A-->>W: documentos agrupados por estagio
+  and
+    W->>A: GET /emendas/{codigo}/distribuicao
+    A-->>W: totais por funcao e por orgao
+  and
+    W->>A: GET /emendas/{codigo}/rastreabilidade
+    A->>A: avalia 5 criterios (RF-08):<br/>empenho, liquidacao, pagamento,<br/>funcao, orgao executor
+    A-->>W: score = atendidos / 5
+  end
+  W-->>U: cadeia de execucao + indicador de completude

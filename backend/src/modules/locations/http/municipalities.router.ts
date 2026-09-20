@@ -1,8 +1,8 @@
 import { Router } from "express";
-import { prisma } from "../lib/prisma.js";
-import { pbLocalidadeFilter } from "../lib/filters.js";
+import { pbLocalidadeFilter } from "../../amendments/infrastructure/amendment-filters.js";
+import { prisma } from "../../../shared/infrastructure/database/prisma.js";
 
-export const municipiosRouter = Router();
+export const municipalitiesRouter = Router();
 
 const UF_BUCKET = "PARAÍBA (UF)";
 
@@ -29,7 +29,7 @@ function canon(nome: string): string {
 //   municipio sao gastos estaduais/nao municipalizados e caem no bucket UF)
 // - transferegov_plano_acao (transferencias especiais EC 105, beneficiario
 //   explicito; "ESTADO DA PARAIBA" cai no bucket UF)
-municipiosRouter.get("/", async (req, res) => {
+municipalitiesRouter.get("/", async (req, res) => {
   const ano = req.query.ano ? Number(req.query.ano) : undefined;
 
   const [alocacoes, despesas, planos] = await Promise.all([

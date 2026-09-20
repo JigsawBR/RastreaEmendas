@@ -1,6 +1,6 @@
-import { prisma } from "./prisma.js";
+import { prisma } from "../../../shared/infrastructure/database/prisma.js";
 
-export async function ugNameMap(codigos: (string | null)[]): Promise<Map<string, string>> {
+export async function getManagingUnitNames(codigos: (string | null)[]): Promise<Map<string, string>> {
   const unique = [...new Set(codigos.filter((c): c is string => !!c))];
   if (unique.length === 0) return new Map();
   const rows = await prisma.unidade_gestora.findMany({

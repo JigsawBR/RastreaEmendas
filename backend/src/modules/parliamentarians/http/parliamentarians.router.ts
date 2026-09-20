@@ -1,11 +1,11 @@
 import { Router } from "express";
-import { prisma } from "../lib/prisma.js";
-import { pbLocalidadeFilter } from "../lib/filters.js";
+import { pbLocalidadeFilter } from "../../amendments/infrastructure/amendment-filters.js";
+import { prisma } from "../../../shared/infrastructure/database/prisma.js";
 
-export const parlamentaresRouter = Router();
+export const parliamentariansRouter = Router();
 
 // GET /parlamentares?ano=
-parlamentaresRouter.get("/", async (req, res) => {
+parliamentariansRouter.get("/", async (req, res) => {
   const ano = req.query.ano ? Number(req.query.ano) : undefined;
 
   const alocacoes = await prisma.emenda_alocacao.findMany({

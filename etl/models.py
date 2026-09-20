@@ -1,7 +1,16 @@
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal
 
-from sqlalchemy import Date, ForeignKey, Integer, Numeric, String, Text, UniqueConstraint
+from sqlalchemy import (
+    Date,
+    DateTime,
+    ForeignKey,
+    Integer,
+    Numeric,
+    String,
+    Text,
+    UniqueConstraint,
+)
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 # Nota: a tabela `favorecido` NAO tem FK para `emenda` porque suas linhas vem
@@ -49,6 +58,24 @@ class EmendaAlocacao(Base):
     valor_resto_inscrito: Mapped[Decimal | None] = mapped_column(Numeric(15, 2))
     valor_resto_cancelado: Mapped[Decimal | None] = mapped_column(Numeric(15, 2))
     valor_resto_pago: Mapped[Decimal | None] = mapped_column(Numeric(15, 2))
+
+
+class CorrecaoAlocacao(Base):
+    """Correcao de valor_empenhado confirmada pela soma dos documentos de empenho.
+
+    Vive fora de `emenda_alocacao` porque a carga sobrescreve aquela tabela: sem
+    este registro, recarregar o ano desfaz a correcao silenciosamente. Guarda
+    tambem o valor corrompido, que e o que permite reaplicar sem inflar e serve
+    de evidencia de por que o numero exibido diverge da API.
+    """
+
+    __tablename__ = "correcao_alocacao"
+
+    codigo_emenda: Mapped[str] = mapped_column(String(20), primary_key=True)
+    valor_corrompido: Mapped[Decimal] = mapped_column(Numeric(15, 2))
+    valor_corrigido: Mapped[Decimal] = mapped_column(Numeric(15, 2))
+    empenhos: Mapped[int] = mapped_column(Integer)
+    criado_em: Mapped[datetime] = mapped_column(DateTime)
 
 
 class Favorecido(Base):
@@ -279,3 +306,15 @@ class DocumentoDespesa(Base):
     nome_favorecido: Mapped[str | None] = mapped_column(String(200))
     uf_favorecido: Mapped[str | None] = mapped_column(String(2))
     valor_documento: Mapped[Decimal | None] = mapped_column(Numeric(15, 2))
+    # resolvidos contra a tabela favorecido (etl.classify_favorecidos). O
+    # municipio e o do favorecido, que so equivale ao municipio beneficiado
+    # quando a natureza e municipal: para um fornecedor e apenas a sede dele
+    natureza_favorecido: Mapped[str | None] = mapped_column(String(120))
+    municipio_favorecido: Mapped[str | None] = mapped_column(String(120))
+    # classificacao derivada das duas colunas acima, gravada aqui para que a
+    # regra exista num lugar so; ver etl.classify_favorecidos
+    destino_recurso: Mapped[str | None] = mapped_column(String(30), index=True)
+    # marca a consulta de detalhe bem-sucedida: os campos acima podem voltar
+    # vazios da API, entao a ausencia deles nao distingue "nunca consultado"
+    # de "consultado e sem dado"
+    detalhe_atualizado_em: Mapped[datetime | None] = mapped_column(DateTime)

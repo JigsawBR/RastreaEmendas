@@ -1,4 +1,5 @@
 import logging
+from itertools import groupby
 
 from sqlalchemy import create_engine
 from sqlalchemy.dialects.postgresql import insert
@@ -35,17 +36,23 @@ def upsert_rows(engine, model, rows: list[dict], key_columns: list[str]) -> int:
         return 0
     table = model.__table__
     with engine.begin() as conn:
-        for start in range(0, len(rows), BATCH_SIZE):
-            batch = rows[start : start + BATCH_SIZE]
-            stmt = insert(table).values(batch)
-            update_cols = {
-                c.name: stmt.excluded[c.name]
-                for c in table.columns
-                if c.name not in key_columns
-            }
-            stmt = stmt.on_conflict_do_update(
-                index_elements=key_columns, set_=update_cols
-            )
-            conn.execute(stmt)
+        # Keep input order and distinguish omitted fields from explicit NULLs.
+        for fields, group in groupby(rows, key=lambda row: tuple(sorted(row))):
+            group_rows = list(group)
+            for start in range(0, len(group_rows), BATCH_SIZE):
+                batch = group_rows[start : start + BATCH_SIZE]
+                stmt = insert(table).values(batch)
+                update_cols = {
+                    name: stmt.excluded[name]
+                    for name in fields
+                    if name not in key_columns
+                }
+                if update_cols:
+                    stmt = stmt.on_conflict_do_update(
+                        index_elements=key_columns, set_=update_cols
+                    )
+                else:
+                    stmt = stmt.on_conflict_do_nothing(index_elements=key_columns)
+                conn.execute(stmt)
     logger.info("Upserted %d rows into %s", len(rows), table.name)
     return len(rows)

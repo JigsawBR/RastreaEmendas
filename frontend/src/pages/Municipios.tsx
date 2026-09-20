@@ -12,22 +12,26 @@ export default function Municipios() {
     queryFn: () => api.municipios(ano),
   });
 
-  const maxValor = data
-    ? Math.max(
-        ...data.items.map((i) =>
-          Math.max(i.valorEmpenhado, i.despesaEmpenhado, i.transferegovValor),
-        ),
-        1,
-      )
-    : 1;
+  // A linha estadual nao e um municipio e vale ordens de grandeza mais que
+  // qualquer um deles: deixada na tabela, ela achata todas as barras e passa a
+  // impressao de que o dinheiro "sumiu" num lugar sem nome.
+  const estadual = data?.items.find((i) => i.localidade.includes("(UF)"));
+  const municipios = data?.items.filter((i) => !i.localidade.includes("(UF)")) ?? [];
+
+  const maxValor = Math.max(
+    ...municipios.map((i) =>
+      Math.max(i.valorEmpenhado, i.despesaEmpenhado, i.transferegovValor),
+    ),
+    1,
+  );
 
   return (
     <div>
       <div className="flex items-end justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-semibold">Municipios / Localidades</h1>
+          <h1 className="text-2xl font-semibold">Municípios</h1>
           <p className="text-slate-600 mt-1">
-            {data ? `${formatInt(data.items.length)} localidades no exercicio ${ano}` : "..."}
+            {data ? `${formatInt(municipios.length)} municípios no exercício ${ano}` : "..."}
           </p>
         </div>
         <select
@@ -38,6 +42,25 @@ export default function Municipios() {
           {ANOS.map((y) => <option key={y} value={y}>{y}</option>)}
         </select>
       </div>
+
+      {estadual && (
+        <div className="bg-sky-50 border border-sky-200 rounded-lg p-4 mb-4">
+          <div className="flex items-baseline justify-between gap-4 flex-wrap">
+            <h2 className="font-semibold text-sky-900">Gasto estadual, sem município definido</h2>
+            <span className="text-lg font-semibold text-sky-900">
+              {formatBRL(estadual.valorEmpenhado)} empenhados
+            </span>
+          </div>
+          <p className="text-sm text-sky-900/80 mt-2">
+            {formatInt(estadual.quantidadeEmendas)} emendas do exercício {ano} têm a
+            localidade registrada como &ldquo;PARAÍBA (UF)&rdquo;. Não é dado faltante: são
+            despesas executadas pelo governo estadual ou pagas a fornecedores, que não se
+            atribuem a um município. Emendas de bancada, que financiam obras e serviços de
+            alcance estadual, caem quase todas aqui. Para ver quem recebeu esse dinheiro,
+            abra a emenda e consulte &ldquo;Para onde o dinheiro foi&rdquo;.
+          </p>
+        </div>
+      )}
 
       <div className="bg-white border border-slate-200 rounded-lg overflow-x-auto">
         <table className="w-full text-xs">
@@ -66,7 +89,7 @@ export default function Municipios() {
             {isLoading && (
               <tr><td colSpan={10} className="px-3 py-8 text-center text-slate-500">Carregando...</td></tr>
             )}
-            {data?.items.map((m) => (
+            {municipios.map((m) => (
               <tr key={m.localidade} className="border-t border-slate-100">
                 <td className="px-3 py-2 whitespace-nowrap">{m.localidade}</td>
                 <td className="px-3 py-2 text-right border-l border-slate-100">
@@ -110,11 +133,10 @@ export default function Municipios() {
       </div>
 
       <p className="text-xs text-slate-500 mt-3">
-        "Emendas" agrega as alocacoes declaradas nas emendas (localidade do gasto).
-        "Despesa mensal" agrega a execucao orcamentaria por municipio; a linha
-        PARAÍBA (UF) concentra os gastos estaduais ou nao municipalizados.
-        "Transf. especiais" agrega os planos de acao do Transferegov (EC 105),
-        cujo beneficiario e sempre explicito. As fontes sao complementares e nao
+        "Emendas" agrega as alocações declaradas nas emendas (localidade do gasto).
+        "Despesa mensal" agrega a execução orçamentária por município.
+        "Transf. especiais" agrega os planos de ação do Transferegov (EC 105),
+        cujo beneficiário é sempre explícito. As fontes são complementares e não
         devem ser somadas.
       </p>
     </div>

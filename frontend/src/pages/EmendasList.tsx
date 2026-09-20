@@ -12,6 +12,7 @@ export default function EmendasList() {
   const [parlamentar, setParlamentar] = useState("");
   const [municipio, setMunicipio] = useState("");
   const [funcao, setFuncao] = useState("");
+  const [orgao, setOrgao] = useState("");
   const [page, setPage] = useState(0);
 
   const params = {
@@ -19,6 +20,7 @@ export default function EmendasList() {
     parlamentar: parlamentar || undefined,
     municipio: municipio || undefined,
     funcao: funcao || undefined,
+    orgao: orgao || undefined,
     limit: PAGE_SIZE,
     offset: page * PAGE_SIZE,
   };
@@ -31,6 +33,7 @@ export default function EmendasList() {
   const exportUrl = api.exportEmendasUrl({
     ano: params.ano, parlamentar: params.parlamentar,
     municipio: params.municipio, funcao: params.funcao,
+    orgao: params.orgao,
   });
 
   const totalPages = data ? Math.ceil(data.total / PAGE_SIZE) : 0;
@@ -50,7 +53,7 @@ export default function EmendasList() {
         </a>
       </div>
 
-      <div className="bg-white border border-slate-200 rounded-lg p-4 mb-4 grid grid-cols-1 md:grid-cols-5 gap-3">
+      <div className="bg-white border border-slate-200 rounded-lg p-4 mb-4 grid grid-cols-1 md:grid-cols-3 gap-3">
         <select
           value={ano ?? ""}
           onChange={(e) => { setAno(e.target.value ? Number(e.target.value) : null); setPage(0); }}
@@ -76,8 +79,15 @@ export default function EmendasList() {
           onChange={(e) => { setFuncao(e.target.value); setPage(0); }}
           className="border border-slate-300 rounded-md px-3 py-2 text-sm"
         />
+        <input
+          aria-label="Órgão executor (nome ou código da UG)"
+          placeholder="Órgão executor / UG"
+          value={orgao}
+          onChange={(e) => { setOrgao(e.target.value); setPage(0); }}
+          className="border border-slate-300 rounded-md px-3 py-2 text-sm"
+        />
         <button
-          onClick={() => { setParlamentar(""); setMunicipio(""); setFuncao(""); setPage(0); }}
+          onClick={() => { setParlamentar(""); setMunicipio(""); setFuncao(""); setOrgao(""); setPage(0); }}
           className="border border-slate-300 rounded-md px-3 py-2 text-sm hover:bg-slate-50"
         >
           Limpar filtros

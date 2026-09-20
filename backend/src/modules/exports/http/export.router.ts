@@ -1,7 +1,10 @@
 import { Router } from "express";
 import type { Prisma } from "@prisma/client";
-import { prisma } from "../lib/prisma.js";
-import { pbLocalidadeFilter } from "../lib/filters.js";
+import {
+  executorFilter,
+  pbLocalidadeFilter,
+} from "../../amendments/infrastructure/amendment-filters.js";
+import { prisma } from "../../../shared/infrastructure/database/prisma.js";
 
 export const exportRouter = Router();
 
@@ -38,6 +41,7 @@ exportRouter.get("/emendas", async (req, res) => {
 
   const emendas = await prisma.emenda.findMany({
     where: {
+      ...await executorFilter(req.query.orgao as string | undefined),
       ...(ano ? { ano } : {}),
       ...(parlamentar ? { nome_autor: { contains: parlamentar, mode: "insensitive" } } : {}),
       emenda_alocacao: { some: alocacaoWhere },

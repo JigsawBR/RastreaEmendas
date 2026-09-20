@@ -1,12 +1,12 @@
 import { Router } from "express";
-import { prisma } from "../lib/prisma.js";
+import { prisma } from "../../../shared/infrastructure/database/prisma.js";
 
-export const orgaosRouter = Router();
+export const organizationsRouter = Router();
 
 // GET /orgaos?ano=
 // Agrega despesa_mensal (que tem UF=PB, nome_autor_emenda != "SEM EMENDA")
 // por orgao superior e por orgao subordinado. Fonte com nome de pasta.
-orgaosRouter.get("/", async (req, res) => {
+organizationsRouter.get("/", async (req, res) => {
   const ano = req.query.ano ? String(req.query.ano) : undefined;
 
   const despesas = await prisma.despesa_mensal.findMany({

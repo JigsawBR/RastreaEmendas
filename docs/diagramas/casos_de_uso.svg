@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="1000" viewBox="0 0 1500 1000" font-family="Segoe UI, Arial, sans-serif">
+  <defs>
+    <marker id="open-arrow" markerWidth="12" markerHeight="12" refX="10" refY="5" orient="auto">
+      <path d="M0,0 L10,5 L0,10" fill="none" stroke="#334155" stroke-width="1.4"/>
+    </marker>
+  </defs>
+
+  <rect width="1500" height="1000" fill="#ffffff"/>
+
+  <!-- fronteira do sistema -->
+  <rect x="360" y="50" width="760" height="830" rx="8" fill="#f8fafc" stroke="#475569" stroke-width="2"/>
+  <text x="740" y="82" text-anchor="middle" font-size="20" font-weight="700" fill="#0f172a">RastreaEmendas</text>
+
+  <!-- ================= atores primarios ================= -->
+  <g stroke="#0f172a" stroke-width="2" fill="none">
+    <circle cx="180" cy="127" r="13"/>
+    <line x1="180" y1="140" x2="180" y2="175"/>
+    <line x1="158" y1="153" x2="202" y2="153"/>
+    <line x1="180" y1="175" x2="163" y2="203"/>
+    <line x1="180" y1="175" x2="197" y2="203"/>
+  </g>
+  <text x="180" y="225" text-anchor="middle" font-size="14" font-weight="600" fill="#0f172a">Operador / agendador</text>
+  <text x="180" y="243" text-anchor="middle" font-size="14" font-weight="600" fill="#0f172a">do ETL</text>
+
+  <g stroke="#0f172a" stroke-width="2" fill="none">
+    <circle cx="180" cy="452" r="13"/>
+    <line x1="180" y1="465" x2="180" y2="500"/>
+    <line x1="158" y1="478" x2="202" y2="478"/>
+    <line x1="180" y1="500" x2="163" y2="528"/>
+    <line x1="180" y1="500" x2="197" y2="528"/>
+  </g>
+  <text x="180" y="552" text-anchor="middle" font-size="14" font-weight="600" fill="#0f172a">Cidadão</text>
+  <text x="180" y="570" text-anchor="middle" font-size="13" fill="#334155">(jornalista, órgão</text>
+  <text x="180" y="587" text-anchor="middle" font-size="13" fill="#334155">de controle, gestor)</text>
+
+  <!-- ================= atores secundarios (sistemas externos) ================= -->
+  <g fill="#eef2ff" stroke="#4f46e5" stroke-width="1.6">
+    <rect x="1190" y="80" width="215" height="54" rx="5"/>
+    <rect x="1190" y="160" width="215" height="54" rx="5"/>
+    <rect x="1190" y="240" width="215" height="54" rx="5"/>
+    <rect x="1190" y="320" width="215" height="54" rx="5"/>
+  </g>
+  <g text-anchor="middle" fill="#312e81">
+    <text x="1297" y="99" font-size="11" font-style="italic">«sistema externo»</text>
+    <text x="1297" y="118" font-size="13" font-weight="600">API Portal Transparência</text>
+    <text x="1297" y="179" font-size="11" font-style="italic">«sistema externo»</text>
+    <text x="1297" y="198" font-size="13" font-weight="600">API Transferegov</text>
+    <text x="1297" y="259" font-size="11" font-style="italic">«sistema externo»</text>
+    <text x="1297" y="278" font-size="13" font-weight="600">Tesouro Transparente</text>
+    <text x="1297" y="339" font-size="11" font-style="italic">«sistema externo»</text>
+    <text x="1297" y="358" font-size="13" font-weight="600">ALPB / SEPLAG-PB</text>
+  </g>
+
+  <!-- ================= casos de uso ================= -->
+  <g fill="#ede9fe" stroke="#6d28d9" stroke-width="1.8">
+    <ellipse cx="740" cy="155" rx="150" ry="42"/>
+    <ellipse cx="600" cy="330" rx="125" ry="42"/>
+    <ellipse cx="940" cy="330" rx="125" ry="42"/>
+    <ellipse cx="600" cy="500" rx="125" ry="42"/>
+    <ellipse cx="940" cy="500" rx="125" ry="42"/>
+    <ellipse cx="940" cy="630" rx="125" ry="42"/>
+    <ellipse cx="600" cy="680" rx="125" ry="42"/>
+    <ellipse cx="940" cy="760" rx="125" ry="42"/>
+  </g>
+  <g text-anchor="middle" fill="#1e1b4b" font-size="13">
+    <text x="740" y="150" font-weight="700">RF-01 Importar dados</text>
+    <text x="740" y="168">das fontes públicas via ETL</text>
+
+    <text x="600" y="325" font-weight="700">RF-02 Consultar emendas</text>
+    <text x="600" y="343">por filtros</text>
+
+    <text x="940" y="325" font-weight="700">RF-07 Exportar</text>
+    <text x="940" y="343">registros da consulta</text>
+
+    <text x="600" y="495" font-weight="700">RF-03 Exibir cadeia</text>
+    <text x="600" y="513">de execução</text>
+
+    <text x="940" y="495" font-weight="700">RF-04 Distribuição por</text>
+    <text x="940" y="513">função e órgão</text>
+
+    <text x="940" y="625" font-weight="700">RF-05 Comparar</text>
+    <text x="940" y="643">empenhado e pago</text>
+
+    <text x="600" y="675" font-weight="700">RF-06 Visualizar dados</text>
+    <text x="600" y="693">por município</text>
+
+    <text x="940" y="755" font-weight="700">RF-08 Indicar completude</text>
+    <text x="940" y="773">(rastreabilidade)</text>
+  </g>
+
+  <!-- ================= associacoes ================= -->
+  <g stroke="#0f172a" stroke-width="1.6" fill="none">
+    <line x1="205" y1="155" x2="590" y2="155"/>
+    <line x1="205" y1="480" x2="514" y2="361"/>
+    <line x1="205" y1="480" x2="476" y2="494"/>
+    <line x1="205" y1="480" x2="528" y2="646"/>
+  </g>
+
+  <g stroke="#4f46e5" stroke-width="1.5" fill="none">
+    <line x1="1190" y1="107" x2="880" y2="140"/>
+    <line x1="1190" y1="187" x2="885" y2="165"/>
+    <line x1="1190" y1="267" x2="852" y2="183"/>
+    <line x1="1190" y1="347" x2="822" y2="190"/>
+  </g>
+
+  <!-- ================= include / extend ================= -->
+  <g stroke="#334155" stroke-width="1.5" fill="none" stroke-dasharray="7 5" marker-end="url(#open-arrow)">
+    <line x1="725" y1="500" x2="811" y2="500"/>
+    <line x1="682" y1="531" x2="854" y2="597"/>
+    <line x1="650" y1="538" x2="886" y2="720"/>
+    <line x1="815" y1="330" x2="729" y2="330"/>
+  </g>
+  <g fill="#334155" font-size="12" font-style="italic" text-anchor="middle">
+    <text x="768" y="492">«include»</text>
+    <text x="778" y="558">«include»</text>
+    <text x="742" y="620">«include»</text>
+    <text x="772" y="322">«extend»</text>
+  </g>
+
+  <!-- ================= legenda ================= -->
+  <g transform="translate(360, 905)">
+    <text x="0" y="0" font-size="13" font-weight="700" fill="#0f172a">Legenda</text>
+    <line x1="90" y1="-5" x2="130" y2="-5" stroke="#0f172a" stroke-width="1.6"/>
+    <text x="138" y="0" font-size="12" fill="#334155">associação ator–caso de uso</text>
+    <line x1="360" y1="-5" x2="400" y2="-5" stroke="#334155" stroke-width="1.5" stroke-dasharray="7 5" marker-end="url(#open-arrow)"/>
+    <text x="408" y="0" font-size="12" fill="#334155">«include»: o caso base sempre executa o incluído</text>
+    <text x="0" y="24" font-size="12" fill="#334155">«extend»: comportamento opcional que estende o caso base — a exportação (RF-07) só ocorre se o usuário solicitar.</text>
+  </g>
+</svg>

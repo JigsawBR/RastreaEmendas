@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { api } from "../lib/api";
 import { formatBRL, formatBRLCompact, formatInt, formatPct } from "../lib/format";
+import DestinoDoDinheiro from "../components/DestinoDoDinheiro";
 
 const ANOS = [2026, 2025, 2024];
 
@@ -49,6 +50,10 @@ export default function Home() {
             <Card title="Pago" value={formatBRL(data.valorPago)} subtitle={formatBRLCompact(data.valorPago)} />
             <Card title="Liquidado" value={formatBRL(data.valorLiquidado)} subtitle={formatBRLCompact(data.valorLiquidado)} />
             <Card title="Restos a pagar inscritos" value={formatBRL(data.valorRestoInscrito)} subtitle={formatBRLCompact(data.valorRestoInscrito)} />
+          </div>
+
+          <div className="mt-8">
+            <DestinoDoDinheiro ano={ano} />
           </div>
         </>
       )}

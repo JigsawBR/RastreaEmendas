@@ -1,0 +1,122 @@
+erDiagram
+  emenda ||--o{ emenda_alocacao : "possui"
+  emenda ||--o{ documento_despesa : "gera"
+  emenda ||..o{ favorecido : "codigo_emenda (sem FK)"
+  emenda ||..o{ transferegov_plano_acao : "numero_emenda (sem FK)"
+  unidade_gestora ||..o{ documento_despesa : "orgao_executor = codigo (sem FK)"
+  transferegov_plano_acao ||..o{ transferegov_empenho : "id_plano_acao (sem FK)"
+  emenda_estadual ||..o{ emenda_estadual_execucao : "ano + numero_emenda (sem FK)"
+
+  emenda {
+    varchar codigo_emenda PK
+    int ano
+    varchar tipo_emenda
+    varchar autor
+    varchar nome_autor
+    varchar numero_emenda
+  }
+
+  emenda_alocacao {
+    int id PK
+    varchar codigo_emenda FK
+    varchar localidade_gasto
+    varchar funcao
+    varchar subfuncao
+    decimal valor_empenhado
+    decimal valor_liquidado
+    decimal valor_pago
+    decimal valor_resto_inscrito
+  }
+
+  documento_despesa {
+    varchar codigo_documento PK
+    varchar codigo_emenda PK, FK
+    date data
+    varchar estagio
+    varchar orgao_executor
+    varchar funcao
+    text observacao
+    text programa
+    text acao
+    varchar nome_favorecido
+    decimal valor_documento
+    decimal valor_empenhado
+    decimal valor_pago
+  }
+
+  unidade_gestora {
+    varchar codigo PK
+    varchar nome
+    varchar uf
+    varchar codigo_orgao
+    varchar nome_orgao
+  }
+
+  favorecido {
+    int id_favorecido PK
+    varchar codigo_emenda
+    varchar ano_mes
+    varchar codigo_favorecido
+    varchar nome_favorecido
+    varchar municipio_favorecido
+    decimal valor_recebido
+  }
+
+  despesa_mensal {
+    int id PK
+    varchar ano_mes
+    varchar uf
+    varchar municipio
+    varchar nome_orgao
+    varchar nome_funcao
+    varchar nome_autor_emenda
+    decimal valor_empenhado
+    decimal valor_liquidado
+    decimal valor_pago
+  }
+
+  transferegov_plano_acao {
+    int id_plano_acao PK
+    varchar codigo_plano_acao
+    int ano_plano_acao
+    varchar situacao_plano_acao
+    varchar nome_beneficiario
+    varchar uf_beneficiario
+    varchar nome_parlamentar
+    varchar numero_emenda
+    decimal valor_custeio
+    decimal valor_investimento
+  }
+
+  transferegov_empenho {
+    int id_empenho PK
+    int id_plano_acao
+    varchar numero_empenho
+    date data_emissao
+    varchar ug_emitente
+    varchar nome_beneficiario
+    decimal valor_empenho
+  }
+
+  emenda_estadual {
+    int id PK
+    int ano
+    varchar numero_emenda
+    varchar nome_deputado
+    varchar secretaria
+    varchar objeto
+    varchar beneficiario_final
+    decimal valor
+  }
+
+  emenda_estadual_execucao {
+    int id PK
+    int ano
+    varchar numero_emenda
+    varchar nome_orgao
+    varchar funcao
+    varchar programa
+    decimal valor_empenhado
+    decimal valor_liquidado
+    decimal valor_pago
+  }

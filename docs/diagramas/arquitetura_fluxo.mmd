@@ -1,0 +1,73 @@
+flowchart TB
+  subgraph FONTES["Fontes de dados publicas"]
+    CGU["API Portal da Transparencia (CGU)<br/>/emendas<br/>/emendas/documentos/{cod}<br/>/despesas/documentos/{cod}"]
+    ABERTOS["Dados abertos CGU<br/>favorecidos e<br/>despesa mensal por municipio"]
+    TGOV["API Transferegov<br/>transferencias especiais<br/>(EC 105)"]
+    TESOURO["Tesouro Transparente (CKAN)<br/>cadastro de UGs do SIAFI"]
+    ALPB["ALPB / SEPLAG-PB<br/>emendas estaduais<br/>(planilhas)"]
+  end
+
+  subgraph ETL["ETL - Python (requests, SQLAlchemy)"]
+    EXTRACT["etl.extract + etl.transform<br/>emendas e documentos<br/>(filtro PB)"]
+    ENRICH["etl.enrich_documentos<br/>objeto do gasto,<br/>favorecido, valor"]
+    LDESP["etl.load_despesas<br/>etl.load_favorecidos"]
+    LTGOV["etl.load_transferegov<br/>planos de acao<br/>e empenhos"]
+    LUGS["etl.load_ugs"]
+    LPB["etl.load_pb<br/>emendas estaduais"]
+  end
+
+  subgraph DB["PostgreSQL"]
+    T1[("emenda<br/>emenda_alocacao")]
+    T2[("documento_despesa")]
+    T3[("despesa_mensal<br/>favorecido")]
+    T4[("transferegov_plano_acao<br/>transferegov_empenho")]
+    T5[("unidade_gestora")]
+    T6[("emenda_estadual<br/>emenda_estadual_execucao")]
+  end
+
+  subgraph API["Back-end - Node.js (Express + Prisma)"]
+    R1["/resumo"]
+    R2["/emendas  /emendas/:cod<br/>/cadeia  /distribuicao<br/>/rastreabilidade (RF-08)"]
+    R3["/municipios<br/>(3 fontes cruzadas)"]
+    R4["/parlamentares<br/>/orgaos"]
+    R5["/export (CSV)"]
+  end
+
+  subgraph WEB["Front-end - React (Vite + React Query)"]
+    P1["Home<br/>(dashboard do exercicio)"]
+    P2["EmendasList<br/>(filtros RF-02)"]
+    P3["EmendaDetail<br/>(cadeia, distribuicao,<br/>rastreabilidade)"]
+    P4["Municipios<br/>(RF-06)"]
+  end
+
+  CGU --> EXTRACT
+  CGU --> ENRICH
+  ABERTOS --> LDESP
+  TGOV --> LTGOV
+  TESOURO --> LUGS
+  ALPB --> LPB
+
+  EXTRACT --> T1
+  EXTRACT --> T2
+  ENRICH --> T2
+  LDESP --> T3
+  LTGOV --> T4
+  LUGS --> T5
+  LPB --> T6
+
+  T1 --> R1
+  T1 --> R2
+  T2 --> R2
+  T5 --> R2
+  T1 --> R3
+  T3 --> R3
+  T4 --> R3
+  T1 --> R4
+  T2 --> R4
+  T1 --> R5
+
+  R1 --> P1
+  R2 --> P2
+  R2 --> P3
+  R3 --> P4
+  R5 --> P2
