@@ -11,6 +11,11 @@ import { traceabilityRouter } from "./modules/traceability/http/traceability.rou
 import { validateQuery } from "./shared/http/query-validation.js";
 import { prisma } from "./shared/infrastructure/database/prisma.js";
 
+import { createStateAmendmentsRouter } from "./modules/state-amendments/http/state-amendments.router.js";
+
+import { createStateAmendmentService } from "./modules/state-amendments/application/state-amendment-service.js";
+import { createPrismaStateAmendmentRepository } from "./modules/state-amendments/infrastructure/prisma-state-amendment-repository.js";
+
 export function buildApp() {
   const app = express();
   app.use(cors());
@@ -22,10 +27,16 @@ export function buildApp() {
       await prisma.$queryRaw`SELECT 1`;
       res.json({ status: "ok", db: "up" });
     } catch (err) {
-      res.status(503).json({ status: "degraded", db: "down", error: String(err) });
+      res
+        .status(503)
+        .json({ status: "degraded", db: "down", error: String(err) });
     }
   });
 
+  const stateService = createStateAmendmentService(
+    createPrismaStateAmendmentRepository(prisma),
+  );
+  app.use("/estaduais", createStateAmendmentsRouter(stateService));
   app.use("/emendas", amendmentsRouter);
   app.use("/emendas", executionRouter);
   app.use("/emendas", traceabilityRouter);
@@ -35,10 +46,17 @@ export function buildApp() {
   app.use("/resumo", analyticsRouter);
   app.use("/export", exportRouter);
 
-  app.use((err: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
-    console.error(err);
-    res.status(500).json({ error: "internal_error", message: String(err) });
-  });
+  app.use(
+    (
+      err: unknown,
+      _req: express.Request,
+      res: express.Response,
+      _next: express.NextFunction,
+    ) => {
+      console.error(err);
+      res.status(500).json({ error: "internal_error", message: String(err) });
+    },
+  );
 
   return app;
 }

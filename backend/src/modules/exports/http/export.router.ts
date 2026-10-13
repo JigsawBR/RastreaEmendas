@@ -1,29 +1,8 @@
 import { Router } from "express";
-import type { Prisma } from "@prisma/client";
-import {
-  executorFilter,
-  pbLocalidadeFilter,
-} from "../../amendments/infrastructure/amendment-filters.js";
-import { prisma } from "../../../shared/infrastructure/database/prisma.js";
+import { findAmendments } from "../../amendments/application/find-amendments.js";
+import { serializeCsv } from "../../../shared/serialization/csv.js";
 
 export const exportRouter = Router();
-
-function toCsv(rows: Record<string, unknown>[]): string {
-  if (rows.length === 0) return "";
-  const headers = Object.keys(rows[0]);
-  const escape = (v: unknown) => {
-    if (v === null || v === undefined) return "";
-    const s = String(v);
-    return s.includes(";") || s.includes("\"") || s.includes("\n")
-      ? `"${s.replace(/"/g, '""')}"`
-      : s;
-  };
-  const lines = [headers.join(";")];
-  for (const row of rows) {
-    lines.push(headers.map((h) => escape(row[h])).join(";"));
-  }
-  return lines.join("\n");
-}
 
 // GET /export/emendas?ano=&parlamentar=&municipio=&funcao=
 // RF-07: exporta a lista filtrada em CSV.
@@ -33,21 +12,12 @@ exportRouter.get("/emendas", async (req, res) => {
   const municipio = req.query.municipio as string | undefined;
   const funcao = req.query.funcao as string | undefined;
 
-  const alocacaoWhere: Prisma.emenda_alocacaoWhereInput = {
-    ...pbLocalidadeFilter(),
-    ...(municipio ? { localidade_gasto: { contains: municipio, mode: "insensitive" } } : {}),
-    ...(funcao ? { funcao: { contains: funcao, mode: "insensitive" } } : {}),
-  };
-
-  const emendas = await prisma.emenda.findMany({
-    where: {
-      ...await executorFilter(req.query.orgao as string | undefined),
-      ...(ano ? { ano } : {}),
-      ...(parlamentar ? { nome_autor: { contains: parlamentar, mode: "insensitive" } } : {}),
-      emenda_alocacao: { some: alocacaoWhere },
-    },
-    include: { emenda_alocacao: { where: alocacaoWhere } },
-    orderBy: [{ ano: "desc" }, { codigo_emenda: "asc" }],
+  const { rows: emendas } = await findAmendments({
+    ano,
+    parlamentar,
+    municipio,
+    funcao,
+    orgao: req.query.orgao as string | undefined,
   });
 
   const rows: Record<string, unknown>[] = [];
@@ -68,7 +38,22 @@ exportRouter.get("/emendas", async (req, res) => {
     }
   }
 
-  const csv = toCsv(rows);
+  const headers = [
+    "codigo_emenda",
+    "ano",
+    "tipo_emenda",
+    "nome_autor",
+    "localidade_gasto",
+    "funcao",
+    "subfuncao",
+    "valor_empenhado",
+    "valor_liquidado",
+    "valor_pago",
+  ];
+  const csv = serializeCsv(
+    headers,
+    rows.map((row) => headers.map((header) => row[header])),
+  );
   res.setHeader("Content-Type", "text/csv; charset=utf-8");
   res.setHeader("Content-Disposition", `attachment; filename="emendas.csv"`);
   res.send(csv);

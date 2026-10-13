@@ -12,7 +12,7 @@ export const validateQuery: RequestHandler = (req, res, next) => {
       return;
     }
   }
-  for (const name of ["parlamentar", "municipio", "funcao", "orgao"]) {
+  for (const name of ["parlamentar", "municipio", "funcao", "orgao", "beneficiario"]) {
     if (req.query[name] !== undefined && typeof req.query[name] !== "string") {
       res.status(400).json({ error: "parametro_invalido", parametro: name });
       return;

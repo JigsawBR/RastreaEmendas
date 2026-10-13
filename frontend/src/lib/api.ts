@@ -1,6 +1,6 @@
 const BASE = "/api";
 
-async function get<T>(path: string): Promise<T> {
+export async function get<T>(path: string): Promise<T> {
   const r = await fetch(`${BASE}${path}`);
   if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
   return (await r.json()) as T;
@@ -99,8 +99,10 @@ export type DistribuicaoResponse = {
     orgaoExecutor: string;
     nomeOrgao: string | null;
     quantidade: number;
-    empenhado: number;
-    pago: number;
+    empenhado: number | null;
+    pago: number | null;
+    empenhosSemValor: number;
+    pagamentosSemValor: number;
   }[];
 };
 
@@ -139,6 +141,7 @@ export type DestinoResponse = {
     rotulo: string;
     descricao: string;
     documentos: number;
+    missingValueCount: number;
     valor: number;
     favorecidos: { nome: string; municipio: string | null; valor: number }[];
   }[];

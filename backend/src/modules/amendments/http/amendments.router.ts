@@ -1,10 +1,6 @@
-import type { Prisma } from "@prisma/client";
 import { Router } from "express";
 import { prisma } from "../../../shared/infrastructure/database/prisma.js";
-import {
-  executorFilter,
-  pbLocalidadeFilter,
-} from "../infrastructure/amendment-filters.js";
+import { findAmendments } from "../application/find-amendments.js";
 
 export const amendmentsRouter = Router();
 
@@ -17,29 +13,16 @@ amendmentsRouter.get("/", async (req, res) => {
   const limit = Math.min(Number(req.query.limit ?? 50), 200);
   const offset = Number(req.query.offset ?? 0);
 
-  const alocacaoWhere: Prisma.emenda_alocacaoWhereInput = {
-    ...pbLocalidadeFilter(),
-    ...(municipio ? { localidade_gasto: { contains: municipio, mode: "insensitive" } } : {}),
-    ...(funcao ? { funcao: { contains: funcao, mode: "insensitive" } } : {}),
-  };
-
-  const where: Prisma.emendaWhereInput = {
-    ...await executorFilter(req.query.orgao as string | undefined),
-    ...(ano ? { ano } : {}),
-    ...(parlamentar ? { nome_autor: { contains: parlamentar, mode: "insensitive" } } : {}),
-    emenda_alocacao: { some: alocacaoWhere },
-  };
-
-  const [total, rows] = await Promise.all([
-    prisma.emenda.count({ where }),
-    prisma.emenda.findMany({
-      where,
-      orderBy: [{ ano: "desc" }, { codigo_emenda: "asc" }],
-      take: limit,
-      skip: offset,
-      include: { emenda_alocacao: { where: alocacaoWhere } },
-    }),
-  ]);
+  const { total, rows } = await findAmendments(
+    {
+      ano,
+      parlamentar,
+      municipio,
+      funcao,
+      orgao: req.query.orgao as string | undefined,
+    },
+    { limit, offset },
+  );
 
   const items = rows.map((emenda) => {
     let empenhado = 0;

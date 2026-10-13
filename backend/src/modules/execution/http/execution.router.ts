@@ -2,18 +2,22 @@ import { Router } from "express";
 import { getManagingUnitNames } from "../../organizations/application/get-managing-unit-names.js";
 import { prisma } from "../../../shared/infrastructure/database/prisma.js";
 import { listFundingDestinations } from "../application/list-funding-destinations.js";
+import { groupExecutionValues } from "../application/group-execution-values.js";
 
 export const executionRouter = Router();
 
 // RF-03: documentos por estágio (empenho, liquidação e pagamento).
 executionRouter.get("/:codigo/cadeia", async (req, res) => {
   const codigo = req.params.codigo;
+  if (!await prisma.emenda.findUnique({ where: { codigo_emenda: codigo } })) {
+    return res.status(404).json({ error: "emenda_nao_encontrada" });
+  }
   const documentos = await prisma.documento_despesa.findMany({
     where: { codigo_emenda: codigo },
     orderBy: [{ estagio: "asc" }, { data: "asc" }],
   });
 
-  const porEstagio: Record<string, typeof documentos> = {};
+  const porEstagio: Record<string, typeof documentos> = { Empenho: [], "Liquidação": [], Pagamento: [] };
   for (const documento of documentos) {
     const estagio = documento.estagio ?? "Sem estagio";
     (porEstagio[estagio] ??= []).push(documento);
@@ -45,9 +49,9 @@ executionRouter.get("/:codigo/cadeia", async (req, res) => {
         programa: documento.programa,
         acao: documento.acao,
         nomeFavorecido: documento.nome_favorecido,
-        valorDocumento: documento.valor_documento ? Number(documento.valor_documento) : null,
-        valorEmpenhado: documento.valor_empenhado ? Number(documento.valor_empenhado) : null,
-        valorPago: documento.valor_pago ? Number(documento.valor_pago) : null,
+        valorDocumento: documento.valor_documento != null ? Number(documento.valor_documento) : null,
+        valorEmpenhado: documento.valor_empenhado != null ? Number(documento.valor_empenhado) : null,
+        valorPago: documento.valor_pago != null ? Number(documento.valor_pago) : null,
       })),
     })),
   });
@@ -56,6 +60,9 @@ executionRouter.get("/:codigo/cadeia", async (req, res) => {
 // RF-04: distribuição por função e órgão executor.
 executionRouter.get("/:codigo/distribuicao", async (req, res) => {
   const codigo = req.params.codigo;
+  if (!await prisma.emenda.findUnique({ where: { codigo_emenda: codigo } })) {
+    return res.status(404).json({ error: "emenda_nao_encontrada" });
+  }
   const [alocacoes, documentos] = await Promise.all([
     prisma.emenda_alocacao.findMany({ where: { codigo_emenda: codigo } }),
     prisma.documento_despesa.findMany({ where: { codigo_emenda: codigo } }),
@@ -71,29 +78,21 @@ executionRouter.get("/:codigo/distribuicao", async (req, res) => {
     porFuncao.set(funcao, total);
   }
 
-  const porOrgao = new Map<string, { quantidade: number; empenhado: number; pago: number }>();
-  for (const documento of documentos) {
-    const orgao = documento.orgao_executor ?? "Sem UG";
-    const total = porOrgao.get(orgao) ?? { quantidade: 0, empenhado: 0, pago: 0 };
-    total.quantidade += 1;
-    total.empenhado += Number(documento.valor_empenhado ?? 0);
-    total.pago += Number(documento.valor_pago ?? 0);
-    porOrgao.set(orgao, total);
-  }
+  const porOrgao = groupExecutionValues(documentos);
 
   const nomesUg = await getManagingUnitNames([...porOrgao.keys()]);
   res.json({
     codigoEmenda: codigo,
     porFuncao: Array.from(porFuncao.entries())
       .map(([funcao, valores]) => ({ funcao, ...valores }))
-      .sort((a, b) => b.empenhado - a.empenhado),
+      .sort((a, b) => (b.empenhado ?? 0) - (a.empenhado ?? 0)),
     porOrgao: Array.from(porOrgao.entries())
       .map(([orgaoExecutor, valores]) => ({
         orgaoExecutor,
         nomeOrgao: nomesUg.get(orgaoExecutor) ?? null,
         ...valores,
       }))
-      .sort((a, b) => b.empenhado - a.empenhado),
+      .sort((a, b) => (b.empenhado ?? 0) - (a.empenhado ?? 0)),
   });
 });
 

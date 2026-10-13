@@ -6,9 +6,9 @@ from io import TextIOWrapper
 from pathlib import Path
 
 import pandas as pd
-import requests
 
 from . import config
+from .http import create_session
 
 logger = logging.getLogger(__name__)
 
@@ -31,11 +31,7 @@ def download_emendas_zip() -> Path:
     # o path da URL exige um ano, mas o payload independe dele
     url = f"{OPENDATA_BASE}/emendas-parlamentares/2024"
     logger.info("Downloading %s", url)
-    with requests.get(url, headers=UA, timeout=180, stream=True) as r:
-        r.raise_for_status()
-        with local.open("wb") as fh:
-            for chunk in r.iter_content(chunk_size=1 << 16):
-                fh.write(chunk)
+    download_zip(url, local)
     logger.info("Saved %s (%d bytes)", local, local.stat().st_size)
     return local
 
@@ -58,13 +54,23 @@ def download_despesas_zip(year: int, month: int) -> Path:
         return local
     url = f"{OPENDATA_BASE}/despesas-execucao/{aaaamm}"
     logger.info("Downloading %s", url)
-    with requests.get(url, headers=UA, timeout=180, stream=True) as r:
-        r.raise_for_status()
-        with local.open("wb") as fh:
-            for chunk in r.iter_content(chunk_size=1 << 16):
-                fh.write(chunk)
+    download_zip(url, local)
     logger.info("Saved %s (%d bytes)", local, local.stat().st_size)
     return local
+
+
+def download_zip(url: str, local: Path) -> None:
+    """Publish a cache file only after a complete and valid ZIP download."""
+    partial = local.with_suffix(".zip.part")
+    with create_session(UA) as session, session.get(url, timeout=180, stream=True) as r:
+        r.raise_for_status()
+        with partial.open("wb") as fh:
+            for chunk in r.iter_content(chunk_size=1 << 16):
+                fh.write(chunk)
+    with zipfile.ZipFile(partial) as archive:
+        if archive.testzip() is not None:
+            raise ValueError("Invalid ZIP returned by the source")
+    partial.replace(local)
 
 
 def read_despesas(zip_path: Path, uf: str | None = None, only_emenda: bool = True) -> pd.DataFrame:

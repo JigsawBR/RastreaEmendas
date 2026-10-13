@@ -3,7 +3,10 @@
 import argparse
 import logging
 
-from .load import get_engine, init_db, insert_rows, upsert_rows
+from .years import parse_years
+from sqlalchemy import insert
+
+from .load import BATCH_SIZE, get_engine, init_db, upsert_rows
 from .models import EmendaEstadual, EmendaEstadualExecucao
 from .pb import BASE_ORCAMENTO, paginated
 from .transform import (
@@ -12,18 +15,6 @@ from .transform import (
 )
 
 logger = logging.getLogger("etl.pb")
-
-
-def parse_years(spec: str) -> list[int]:
-    years: set[int] = set()
-    for piece in spec.split(","):
-        piece = piece.strip()
-        if "-" in piece:
-            start, end = piece.split("-")
-            years.update(range(int(start), int(end) + 1))
-        else:
-            years.add(int(piece))
-    return sorted(years)
 
 
 def load_listagem(engine, year: int) -> None:
@@ -49,7 +40,8 @@ def load_execucao(engine, year: int) -> None:
             "DELETE FROM emenda_estadual_execucao WHERE ano = %s",
             (year,),
         )
-    insert_rows(engine, EmendaEstadualExecucao, rows)
+        for start in range(0, len(rows), BATCH_SIZE):
+            conn.execute(insert(EmendaEstadualExecucao.__table__), rows[start:start + BATCH_SIZE])
 
 
 def main() -> None:

@@ -27,12 +27,13 @@ export default function DestinoDoDinheiro(props: Props) {
   if (!data || data.grupos.length === 0) {
     return <p className="text-slate-500">Sem empenhos com favorecido identificado.</p>;
   }
+  const missingValues = data.grupos.reduce((sum, group) => sum + group.missingValueCount, 0);
 
   return (
     <section className="bg-white border border-slate-200 rounded-lg p-5">
-      <h2 className="text-lg font-semibold text-slate-900">Para onde o dinheiro foi</h2>
+      <h2 className="text-lg font-semibold text-slate-900">Destinação dos empenhos</h2>
       <p className="text-sm text-slate-600 mt-1">
-        Quem recebeu os empenhos, {formatBRL(data.valorTotal)} no total.
+        Favorecidos identificados nos empenhos, {formatBRL(data.valorTotal)} em valores informados.
         {!porEmenda && (
           <>
             {" "}A localidade do gasto informada pelo Portal diz apenas onde a despesa foi
@@ -40,8 +41,14 @@ export default function DestinoDoDinheiro(props: Props) {
             município.
           </>
         )}{" "}
-        Aqui o agrupamento é por quem de fato recebeu o pagamento.
+        O agrupamento usa o favorecido do documento de empenho. O pagamento é uma
+        etapa posterior, consultável na cadeia de execução da emenda.
       </p>
+      {missingValues > 0 && (
+        <p className="text-sm text-amber-800 mt-2">
+          Total parcial: {formatInt(missingValues)} documentos de empenho sem valor informado.
+        </p>
+      )}
 
       <Barra data={data} />
 
@@ -61,6 +68,7 @@ export default function DestinoDoDinheiro(props: Props) {
 }
 
 function Barra({ data }: { data: DestinoResponse }) {
+  if (data.valorTotal <= 0) return null;
   return (
     <div className="flex h-3 rounded-full overflow-hidden mt-4 bg-slate-100">
       {data.grupos.map((g) => (
@@ -88,9 +96,9 @@ function Grupo({ grupo, total }: { grupo: DestinoResponse["grupos"][number]; tot
           <span className="flex items-baseline justify-between gap-3">
             <span className="font-medium text-slate-900">{grupo.rotulo}</span>
             <span className="text-slate-900 font-semibold whitespace-nowrap">
-              {formatBRL(grupo.valor)}{" "}
+              {grupo.missingValueCount === grupo.documentos ? "Não informado" : formatBRL(grupo.valor)}{" "}
               <span className="text-slate-500 font-normal">
-                ({formatPct(grupo.valor / total)})
+                {total > 0 ? `(${formatPct(grupo.valor / total)})` : ""}
               </span>
             </span>
           </span>

@@ -3,7 +3,7 @@
 import logging
 from typing import Iterator
 
-import requests
+from .http import create_session
 
 logger = logging.getLogger(__name__)
 
@@ -13,8 +13,7 @@ PAGE_SIZE = 500
 
 
 def paginated(base_url: str, endpoint: str, params: dict) -> Iterator[dict]:
-    session = requests.Session()
-    session.headers.update(UA)
+    session = create_session(UA)
     page = 1
     total: int | None = None
     while True:

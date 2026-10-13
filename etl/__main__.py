@@ -1,5 +1,7 @@
 import argparse
 import logging
+
+from .years import parse_years
 from collections import Counter
 from decimal import Decimal
 
@@ -32,20 +34,7 @@ TOTAIS_SQL = text("""
 """)
 
 
-def parse_years(spec: str) -> list[int]:
-    """Accept "2024", "2020-2025", "2022,2024", "2020-2023,2025"."""
-    years: set[int] = set()
-    for piece in spec.split(","):
-        piece = piece.strip()
-        if "-" in piece:
-            start, end = piece.split("-")
-            years.update(range(int(start), int(end) + 1))
-        else:
-            years.add(int(piece))
-    return sorted(years)
-
-
-def revalidate_valores(client: PortalClient, year: int, rows: list[dict]) -> list[dict]:
+def revalidate_valores(client: PortalClient, year: int, rows: list[dict], *, refresh: bool = False) -> list[dict]:
     """Cross-check the values from the year listing against fetch_emenda.
 
     The detail wins by default: it is sampled several times and the listing is
@@ -58,7 +47,7 @@ def revalidate_valores(client: PortalClient, year: int, rows: list[dict]) -> lis
     detalhe: dict[tuple[str, str, str, str], dict] = {}
     for i, codigo in enumerate(codigos, start=1):
         try:
-            for r in fetch_emenda(client, codigo):
+            for r in fetch_emenda(client, codigo, refresh=refresh):
                 detalhe[grain(r)] = r
         except Exception as exc:
             logger.warning("Year %d: falha ao revalidar %s: %s", year, codigo, exc)
@@ -107,15 +96,15 @@ def revalidate_valores(client: PortalClient, year: int, rows: list[dict]) -> lis
     return revalidadas
 
 
-def run_year(client: PortalClient, engine, year: int, uf: str, skip_documentos: bool) -> None:
+def run_year(client: PortalClient, engine, year: int, uf: str, skip_documentos: bool, *, refresh: bool = False) -> None:
     uf_nome = UF_NOMES[uf]
-    raw_rows = fetch_emendas(client, year)
+    raw_rows = fetch_emendas(client, year, refresh=refresh)
     uf_rows = [
         r for r in raw_rows
         if is_localidade_uf(r.get("localidadeDoGasto"), uf, uf_nome)
     ]
 
-    uf_rows = revalidate_valores(client, year, uf_rows)
+    uf_rows = revalidate_valores(client, year, uf_rows, refresh=refresh)
 
     emendas = {r["codigoEmenda"]: transform_emenda(r) for r in uf_rows}
     alocacoes = [transform_alocacao(r) for r in uf_rows]
@@ -156,7 +145,7 @@ def run_year(client: PortalClient, engine, year: int, uf: str, skip_documentos: 
     if invalid:
         logger.warning("Year %d: %d emendas without valid codigo skipped: %s", year, len(invalid), invalid)
     for i, codigo in enumerate(codigos, start=1):
-        raw_docs = fetch_documentos(client, codigo)
+        raw_docs = fetch_documentos(client, codigo, refresh=refresh)
         raw_doc_count += len(raw_docs)
         for d in raw_docs:
             row = transform_documento(d, codigo)
@@ -179,6 +168,7 @@ def main() -> None:
     parser.add_argument("--years", default="2020-2025", help="ex.: 2024 | 2020-2025 | 2022,2024")
     parser.add_argument("--uf", default="PB", choices=sorted(UF_NOMES))
     parser.add_argument("--skip-documentos", action="store_true")
+    parser.add_argument("--refresh", action="store_true", help="consulta novamente a fonte, ignorando o cache de emendas e documentos")
     args = parser.parse_args()
 
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
@@ -188,7 +178,7 @@ def main() -> None:
     init_db(engine)
 
     for year in parse_years(args.years):
-        run_year(client, engine, year, args.uf, args.skip_documentos)
+        run_year(client, engine, year, args.uf, args.skip_documentos, refresh=args.refresh)
 
 
 if __name__ == "__main__":

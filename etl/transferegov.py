@@ -4,7 +4,7 @@ import logging
 import re
 from typing import Iterator
 
-import requests
+from .http import create_session
 
 logger = logging.getLogger(__name__)
 
@@ -16,8 +16,7 @@ PAGE_SIZE = 1000  # limite maximo do endpoint PostgREST
 def paginated(endpoint: str, params: dict | None = None) -> Iterator[dict]:
     """Itera todos os registros de um endpoint, paginando via limit+offset."""
     offset = 0
-    session = requests.Session()
-    session.headers.update(UA)
+    session = create_session(UA)
     total = None
     while True:
         query = {**(params or {}), "limit": PAGE_SIZE, "offset": offset}

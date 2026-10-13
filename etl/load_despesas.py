@@ -2,8 +2,9 @@
 
 import argparse
 import logging
+from sqlalchemy import insert
 
-from .load import get_engine, init_db, insert_rows
+from .load import BATCH_SIZE, get_engine, init_db
 from .models import DespesaMensal
 from .opendata import download_despesas_zip, read_despesas
 from .transform import transform_despesa_mensal
@@ -35,7 +36,8 @@ def run_month(engine, year: int, month: int, uf: str) -> None:
             "DELETE FROM despesa_mensal WHERE ano_mes = %s",
             (aaaamm,),
         )
-    insert_rows(engine, DespesaMensal, rows)
+        for start in range(0, len(rows), BATCH_SIZE):
+            conn.execute(insert(DespesaMensal.__table__), rows[start:start + BATCH_SIZE])
 
 
 def main() -> None:

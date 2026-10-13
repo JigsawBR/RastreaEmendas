@@ -3,7 +3,7 @@ import { useState } from "react";
 import { api } from "../lib/api";
 import { formatBRL, formatInt } from "../lib/format";
 
-const ANOS = [2026, 2025, 2024];
+const ANOS = [2026, 2025, 2024, 2023];
 
 export default function Municipios() {
   const [ano, setAno] = useState<number>(2024);
@@ -30,6 +30,7 @@ export default function Municipios() {
       <div className="flex items-end justify-between mb-6">
         <div>
           <h1 className="text-2xl font-semibold">Municípios</h1>
+          <p className="muted small">Esta visão territorial usa as fontes federais. A listagem estadual da CODATA não fornece município estruturado; consulte as emendas estaduais por beneficiário.</p>
           <p className="text-slate-600 mt-1">
             {data ? `${formatInt(municipios.length)} municípios no exercício ${ano}` : "..."}
           </p>
@@ -57,7 +58,7 @@ export default function Municipios() {
             despesas executadas pelo governo estadual ou pagas a fornecedores, que não se
             atribuem a um município. Emendas de bancada, que financiam obras e serviços de
             alcance estadual, caem quase todas aqui. Para ver quem recebeu esse dinheiro,
-            abra a emenda e consulte &ldquo;Para onde o dinheiro foi&rdquo;.
+            abra a emenda e consulte &ldquo;Destinação dos empenhos&rdquo;.
           </p>
         </div>
       )}

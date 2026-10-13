@@ -8,20 +8,20 @@ import { prisma } from "../../../shared/infrastructure/database/prisma.js";
 const DESTINOS = {
   municipio: {
     rotulo: "Repasse a município",
-    descricao: "O dinheiro foi transferido a uma prefeitura ou fundo municipal.",
+    descricao: "Empenhos destinados a uma prefeitura ou fundo municipal.",
   },
   estado: {
     rotulo: "Execução pelo Estado",
-    descricao: "O recurso ficou com o governo estadual, que executa a despesa.",
+    descricao: "Empenhos destinados ao governo estadual para execução da despesa.",
   },
   federal: {
     rotulo: "Órgão federal",
-    descricao: "O recurso foi para uma universidade ou instituto federal.",
+    descricao: "Empenhos destinados a uma universidade ou instituto federal.",
   },
   privado: {
     rotulo: "Empresa ou entidade privada",
     descricao:
-      "Pagamento a fornecedor, construtora, associação ou fundação contratada. "
+      "Empenhos destinados a fornecedor, construtora, associação ou fundação. "
       + "O endereço da empresa não indica o município beneficiado.",
   },
   pessoa_fisica: {
@@ -32,7 +32,7 @@ const DESTINOS = {
 
 const SEM_CLASSIFICACAO = {
   rotulo: "Não informado",
-  descricao: "O documento não traz favorecido na fonte.",
+  descricao: "Favorecido ainda não identificado nos dados disponíveis.",
 };
 
 type Grupo = {
@@ -40,6 +40,7 @@ type Grupo = {
   rotulo: string;
   descricao: string;
   documentos: number;
+  missingValueCount: number;
   valor: number;
   favorecidos: { nome: string; municipio: string | null; valor: number }[];
 };
@@ -74,12 +75,15 @@ export async function listFundingDestinations(where: { codigo_emenda?: string; a
       destino: chave,
       ...rotular(d.destino_recurso),
       documentos: 0,
+      missingValueCount: 0,
       valor: 0,
       favorecidos: [],
     };
     grupo.documentos += 1;
+    if (d.valor_documento == null) grupo.missingValueCount += 1;
     grupo.valor += Number(d.valor_documento ?? 0);
     grupos.set(chave, grupo);
+    if (d.valor_documento == null) continue;
 
     const nome = d.nome_favorecido ?? "Não informado";
     const favs = porFavorecido.get(chave) ?? new Map();

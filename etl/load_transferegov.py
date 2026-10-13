@@ -3,6 +3,8 @@
 import argparse
 import logging
 
+from .years import parse_years
+
 from .load import get_engine, init_db, upsert_rows
 from .models import TransferegovEmpenho, TransferegovPlanoAcao
 from .transferegov import paginated
@@ -12,18 +14,6 @@ from .transform import (
 )
 
 logger = logging.getLogger("etl.transferegov")
-
-
-def parse_years(spec: str) -> list[int]:
-    years: set[int] = set()
-    for piece in spec.split(","):
-        piece = piece.strip()
-        if "-" in piece:
-            start, end = piece.split("-")
-            years.update(range(int(start), int(end) + 1))
-        else:
-            years.add(int(piece))
-    return sorted(years)
 
 
 def load_planos_acao(engine, uf: str, years: list[int]) -> None:

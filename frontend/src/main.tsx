@@ -8,9 +8,13 @@ import Home from "./pages/Home.tsx";
 import EmendasList from "./pages/EmendasList.tsx";
 import EmendaDetail from "./pages/EmendaDetail.tsx";
 import Municipios from "./pages/Municipios.tsx";
+import DataSources from "./pages/DataSources.tsx";
+import StateAmendmentDetail from "./pages/StateAmendmentDetail.tsx";
 
 const queryClient = new QueryClient({
-  defaultOptions: { queries: { staleTime: 60_000, refetchOnWindowFocus: false } },
+  defaultOptions: {
+    queries: { staleTime: 60_000, refetchOnWindowFocus: false },
+  },
 });
 
 createRoot(document.getElementById("root")!).render(
@@ -22,7 +26,21 @@ createRoot(document.getElementById("root")!).render(
             <Route index element={<Home />} />
             <Route path="emendas" element={<EmendasList />} />
             <Route path="emendas/:codigo" element={<EmendaDetail />} />
+            <Route
+              path="emendas-estaduais/:ano/:numero"
+              element={<StateAmendmentDetail />}
+            />
             <Route path="municipios" element={<Municipios />} />
+            <Route path="sobre-os-dados" element={<DataSources />} />
+            <Route
+              path="*"
+              element={
+                <div className="panel">
+                  <h1>Página não encontrada</h1>
+                  <a href="/">Voltar à visão geral</a>
+                </div>
+              }
+            />
           </Route>
         </Routes>
       </BrowserRouter>

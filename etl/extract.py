@@ -8,10 +8,10 @@ from .transform import parse_brl
 logger = logging.getLogger(__name__)
 
 
-def fetch_emendas(client: PortalClient, year: int) -> list[dict]:
+def fetch_emendas(client: PortalClient, year: int, *, refresh: bool = False) -> list[dict]:
     """Fetch all /emendas rows for a year. The API has no UF filter (checked
     in the OpenAPI spec), so this returns the whole country; filter locally."""
-    cached = load_raw(f"emendas_{year}")
+    cached = None if refresh else load_raw(f"emendas_{year}")
     if cached is not None:
         logger.info("Year %d: %d rows loaded from cache", year, len(cached))
         return cached
@@ -63,7 +63,7 @@ def _fetch_emenda_once(client: PortalClient, codigo_emenda: str) -> list[dict]:
     return results
 
 
-def fetch_emenda(client: PortalClient, codigo_emenda: str) -> list[dict]:
+def fetch_emenda(client: PortalClient, codigo_emenda: str, *, refresh: bool = False) -> list[dict]:
     """Fetch one emenda by code, sampling the endpoint SAMPLES times and
     keeping the largest value seen for each monetary field.
 
@@ -73,7 +73,7 @@ def fetch_emenda(client: PortalClient, codigo_emenda: str) -> list[dict]:
     the server. The corruption only ever shrinks the value, so the maximum
     across samples converges on the real one. See CLAUDE.md.
     """
-    cached = load_raw(f"emenda/{codigo_emenda}")
+    cached = None if refresh else load_raw(f"emenda/{codigo_emenda}")
     if cached is not None:
         return cached
 
@@ -105,8 +105,8 @@ def fetch_emenda(client: PortalClient, codigo_emenda: str) -> list[dict]:
     return results
 
 
-def fetch_documentos(client: PortalClient, codigo_emenda: str) -> list[dict]:
-    cached = load_raw(f"documentos/{codigo_emenda}")
+def fetch_documentos(client: PortalClient, codigo_emenda: str, *, refresh: bool = False) -> list[dict]:
+    cached = None if refresh else load_raw(f"documentos/{codigo_emenda}")
     if cached is not None:
         return cached
     results: list[dict] = []

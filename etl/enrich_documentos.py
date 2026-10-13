@@ -12,9 +12,10 @@ import logging
 import re
 from decimal import Decimal, InvalidOperation
 
-from sqlalchemy import text
+from sqlalchemy import bindparam, text
 
 from .api_client import PortalClient
+from .__main__ import parse_years
 from .load import get_engine, init_db
 from .transform import parse_brl
 
@@ -67,13 +68,17 @@ def ensure_columns(engine) -> None:
 
 
 def fetch_pending(
-    engine, retry_all: bool, limit: int | None, emendas: list[str] | None = None
+    engine, retry_all: bool, limit: int | None, emendas: list[str] | None = None,
+    years: list[int] | None = None,
 ) -> list[str]:
     filtros = [] if retry_all else ["detalhe_atualizado_em IS NULL"]
     params: dict = {}
     if emendas:
         filtros.append("codigo_emenda = ANY(:emendas)")
         params["emendas"] = emendas
+    if years is not None:
+        filtros.append("codigo_emenda IN (SELECT codigo_emenda FROM emenda WHERE ano IN :years)")
+        params["years"] = years
     where = f"WHERE {' AND '.join(filtros)}" if filtros else ""
     sql = (
         "SELECT DISTINCT codigo_documento FROM documento_despesa "
@@ -81,8 +86,11 @@ def fetch_pending(
     )
     if limit:
         sql += f" LIMIT {int(limit)}"
+    statement = text(sql)
+    if years is not None:
+        statement = statement.bindparams(bindparam("years", expanding=True))
     with engine.connect() as conn:
-        return [r[0] for r in conn.execute(text(sql), params)]
+        return [r[0] for r in conn.execute(statement, params)]
 
 
 def _parse_valor(codigo: str, v) -> Decimal | None:
@@ -132,6 +140,7 @@ def main() -> None:
         description="Enriquece documento_despesa com o detalhe da despesa (CGU)"
     )
     parser.add_argument("--limit", type=int, help="processa no maximo N documentos")
+    parser.add_argument("--years", help="exercício da emenda, ex.: 2023 | 2023-2026")
     parser.add_argument(
         "--retry-all", action="store_true",
         help="reprocessa tambem documentos ja enriquecidos",
@@ -153,7 +162,8 @@ def main() -> None:
     ensure_columns(engine)
 
     emendas = [c.strip() for c in args.emendas.split(",")] if args.emendas else None
-    codigos = fetch_pending(engine, args.retry_all, args.limit, emendas)
+    years = parse_years(args.years) if args.years else None
+    codigos = fetch_pending(engine, args.retry_all, args.limit, emendas, years=years)
     logger.info("Documentos a enriquecer: %d (%d amostras cada)", len(codigos), args.samples)
     if not codigos:
         return

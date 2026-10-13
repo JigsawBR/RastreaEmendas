@@ -1,32 +1,56 @@
-import { NavLink, Outlet } from "react-router-dom";
+import {
+  NavLink,
+  Outlet,
+  useLocation,
+  useSearchParams,
+} from "react-router-dom";
 
 export default function App() {
+  const location = useLocation();
+  const [search] = useSearchParams();
+  const stateDetail = location.pathname.startsWith("/emendas-estaduais/");
+  const source =
+    stateDetail || search.get("origem") === "estadual" ? "estadual" : "federal";
+  const year = stateDetail
+    ? location.pathname.split("/")[2]
+    : search.get("ano");
+  const query = new URLSearchParams({ origem: source });
+  if (year) query.set("ano", year);
+  const scope = "?" + query.toString();
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
-      <header className="border-b border-slate-200 bg-white">
-        <div className="mx-auto max-w-7xl px-6 py-4 flex items-center gap-8">
-          <NavLink to="/" className="text-lg font-semibold text-slate-900">
-            Rastrea<span className="text-emerald-600">Emendas</span>
+    <div className="app-shell">
+      <a href="#main-content" className="skip-link">
+        Ir para o conteúdo
+      </a>
+      <header className="site-header">
+        <div className="header-inner">
+          <NavLink to={"/" + scope} className="brand">
+            RastreaEmendas
           </NavLink>
-          <nav className="flex gap-6 text-sm">
-            <NavLink to="/" end className={({ isActive }) =>
-              isActive ? "text-emerald-700 font-medium" : "text-slate-600 hover:text-slate-900"
-            }>Dashboard</NavLink>
-            <NavLink to="/emendas" className={({ isActive }) =>
-              isActive ? "text-emerald-700 font-medium" : "text-slate-600 hover:text-slate-900"
-            }>Emendas</NavLink>
-            <NavLink to="/municipios" className={({ isActive }) =>
-              isActive ? "text-emerald-700 font-medium" : "text-slate-600 hover:text-slate-900"
-            }>Municipios</NavLink>
+          <nav aria-label="Navegação principal">
+            <NavLink to="/" end>
+              Visão geral
+            </NavLink>
+            <NavLink
+              to={"/emendas" + scope}
+              className={
+                location.pathname.startsWith("/emendas") ? "active" : ""
+              }
+            >
+              Emendas
+            </NavLink>
+            <NavLink to="/municipios">Municípios</NavLink>
+            <NavLink to={"/sobre-os-dados" + scope}>Sobre os dados</NavLink>
           </nav>
-          <div className="ml-auto text-xs text-slate-500">
-            TCC IFPB Cajazeiras - Paraiba
-          </div>
+          <span className="header-caption">PARAÍBA / DADOS ABERTOS</span>
         </div>
       </header>
-      <main className="mx-auto max-w-7xl px-6 py-8">
+      <main id="main-content" className="page-container">
         <Outlet />
       </main>
+      <footer className="site-footer">
+        RastreaEmendas · Transparência para a Paraíba / TCC · IFPB Cajazeiras
+      </footer>
     </div>
   );
 }

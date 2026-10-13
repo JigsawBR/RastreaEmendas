@@ -18,7 +18,8 @@ test("query validation, executor filters and missing traceability", async () => 
   stub(prisma.emenda, "findMany", async ({ where }) => { exportWhere = where; return []; });
   stub(prisma.emenda, "findUnique", async ({ where }) =>
     where.codigo_emenda === "exists" ? { codigo_emenda: "exists" } : null);
-  stub(prisma.documento_despesa, "findMany", async () => []);
+  let documents = [];
+  stub(prisma.documento_despesa, "findMany", async () => documents);
   stub(prisma.emenda_alocacao, "findMany", async () => []);
   const server = buildApp().listen(0, "127.0.0.1");
   await new Promise(resolve => server.once("listening", resolve));
@@ -31,6 +32,12 @@ test("query validation, executor filters and missing traceability", async () => 
     assert.equal((await get("/export/emendas?ano=abc")).status, 400);
     assert.equal((await get("/resumo?ano=abc")).status, 400);
     assert.equal((await get("/emendas/missing/rastreabilidade")).status, 404);
+    assert.equal((await get("/emendas/missing/cadeia")).status, 404);
+    assert.equal((await get("/emendas/missing/distribuicao")).status, 404);
+    const chain = await (await get("/emendas/exists/cadeia")).json();
+    assert.deepEqual(chain.estagios.map(item => [item.estagio, item.quantidade]), [
+      ["Empenho", 0], ["Liquidação", 0], ["Pagamento", 0],
+    ]);
     const existing = await get("/emendas/exists/rastreabilidade");
     assert.equal(existing.status, 200);
     assert.equal((await existing.json()).score, 0);
@@ -39,6 +46,17 @@ test("query validation, executor filters and missing traceability", async () => 
     const expected = structuredClone(listWhere);
     assert.equal((await get("/export/emendas?ano=2024&orgao=Hospital")).status, 200);
     assert.deepEqual(exportWhere, expected);
+    documents = [
+      { destino_recurso: null, nome_favorecido: null, municipio_favorecido: null, valor_documento: null },
+      { destino_recurso: "municipio", nome_favorecido: "Município", municipio_favorecido: null, valor_documento: 0 },
+    ];
+    const destination = await (await get("/emendas/exists/destino")).json();
+    const missing = destination.grupos.find(group => group.destino === "nao_informado");
+    const zero = destination.grupos.find(group => group.destino === "municipio");
+    assert.equal(missing.missingValueCount, 1);
+    assert.deepEqual(missing.favorecidos, []);
+    assert.equal(zero.missingValueCount, 0);
+    assert.equal(zero.favorecidos[0].valor, 0);
   } finally {
     await new Promise(resolve => server.close(resolve));
     for (const [model, method, original] of originals) model[method] = original;

@@ -25,3 +25,7 @@ tcc1_final_word.pdf
 # Instrucoes/contexto para assistentes de IA (uso local)
 CLAUDE.md
 AGENTS.md
+
+# Artefatos dos testes de navegador
+playwright-report/
+test-results/
