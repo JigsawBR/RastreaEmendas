@@ -14,21 +14,25 @@ A API e o ETL são executáveis independentes. Eles se integram pelo PostgreSQL,
 sem compartilhar código de execução. As decisões e regras de dependência estão
 documentadas em [docs/arquitetura-monolito-modular.md](docs/arquitetura-monolito-modular.md).
 
+O mapa completo de pastas e os comandos por fonte estão em
+[docs/estrutura-do-projeto.md](docs/estrutura-do-projeto.md).
+
 ## Back-end
 
 ```text
-backend/src
-├── modules
-│   ├── amendments
-│   ├── analytics
-│   ├── execution
-│   ├── exports
-│   ├── locations
-│   ├── organizations
-│   ├── parliamentarians
-│   ├── state-amendments
-│   └── traceability
-├── shared
+backend/src/
+├── modules/
+│   ├── federal-amendments/
+│   │   ├── amendments/
+│   │   ├── analytics/
+│   │   ├── execution/
+│   │   ├── exports/
+│   │   ├── locations/
+│   │   ├── organizations/
+│   │   ├── parliamentarians/
+│   │   └── traceability/
+│   └── state-amendments/
+├── shared/
 └── app.ts
 ```
 
@@ -52,13 +56,14 @@ A carga local de 2023 e as verificações dos RF-01 a RF-05 estão registradas e
 Na raiz, com o ambiente Python ativado:
 
 ```text
-python -m etl --years 2023-2026
-python -m etl --years 2023-2026 --refresh
-python -m etl.load_transferegov --years 2023-2026
-python -m etl.load_pb --years 2023-2026
-python -m etl.enrich_documentos --years 2023
-python -m etl.load_favorecidos --years 2023
-python -m etl.load_despesas --years 2023
+python -m etl.federal --years 2023-2026
+python -m etl.federal --years 2023-2026 --refresh
+python -m etl.federal.load_transferegov --years 2023-2026
+python -m etl.state --years 2023-2026
+python -m etl.state --years 2023-2026 --refresh
+python -m etl.federal.enrich_documentos --years 2023
+python -m etl.federal.load_favorecidos --years 2023
+python -m etl.federal.load_despesas --years 2023
 ```
 
 A primeira execução federal reutiliza o cache disponível. `--refresh` consulta
@@ -66,15 +71,23 @@ novamente listagens, detalhes de emendas e documentos; só substitui cada arquiv
 de cache depois da respectiva consulta completa. A carga atualiza e insere
 registros, mas não remove registros que desapareceram da fonte.
 Os valores e favorecidos dos documentos exigem o enriquecimento separado:
-`python -m etl.enrich_documentos` (pendentes) ou
-`python -m etl.enrich_documentos --retry-all` (também os já enriquecidos).
+`python -m etl.federal.enrich_documentos` (pendentes) ou
+`python -m etl.federal.enrich_documentos --retry-all` (também os já enriquecidos).
 `--years 2023` restringe o enriquecimento às emendas daquele exercício,
 incluindo os documentos executados em anos posteriores. Reexecutar o comando
 retoma os documentos pendentes; uma resposta vazia da fonte continua pendente.
 Os arquivos mensais de despesas são gravados apenas depois de um download
 completo e válido, e cada mês é substituído em uma única transação.
-As rotinas estadual e Transferegov consultam diretamente suas fontes e usam
-tentativas com espera exponencial. A substituição da execução estadual de cada
+O ETL estadual salva os registros brutos da CODATA antes da transformação em
+`data/raw/state/pb/listagem_emendas_<ano>.json` e
+`data/raw/state/pb/execucao_emendas_<ano>.json`. Por padrão, reutiliza os arquivos
+existentes; `--refresh` consulta novamente os dois endpoints para os anos
+selecionados. Cada cache é substituído de forma atômica somente após a coleta
+completa. Falhas preservam o arquivo anterior e interrompem a respectiva carga,
+sem usar silenciosamente dados antigos. Os arquivos JSON contêm os registros
+originais; a data de modificação indica quando foram salvos. O cache não expira
+automaticamente nem mantém histórico de versões.
+A coleta estadual e o Transferegov usam tentativas com espera exponencial. A substituição da execução estadual de cada
 ano é transacional: uma falha na inserção desfaz também a exclusão anterior.
 Não existe agendamento automático dessas rotinas.
 
@@ -103,6 +116,22 @@ Contratos, limites e verificações da consulta estadual estão em
 
 Verificações: `npm test` em `backend`, `npm run build` em `frontend` e
 `python -m unittest discover -s etl/tests -v` na raiz.
+
+## Evidências complementares
+
+A tela de Municípios inclui [mapa interativo da Paraíba](docs/mapa-municipios.md),
+com os 223 municípios, filtros de exercício/origem e vínculos federais e estaduais.
+
+O detalhe federal e estadual integra convênios, contratos, entidades citadas,
+relatórios do Transferegov, gastos locais e medições candidatas do SICONV.
+Cada registro mostra fonte, coleta, regra de vínculo e seu grau de confirmação.
+Há importação de documentos revisados para solicitação original e entrega.
+Consulte [cargas, revisão documental e limites](docs/evidencias-complementares.md).
+
+```text
+python -m etl.evidence --years 2023-2026
+python -m etl.evidence --years 2023-2026 --sources siconv,queue
+```
 
 ## Arquitetura e testes de integração
 

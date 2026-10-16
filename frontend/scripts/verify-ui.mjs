@@ -50,7 +50,7 @@ async function render(module, url, populate) {
           React.createElement(Route, {
             path: module.includes("StateAmendmentDetail")
               ? "/emendas-estaduais/:ano/:numero"
-              : module.includes("EmendaDetail")
+              : module.includes("AmendmentDetail")
                 ? "/emendas/:codigo"
                 : "*",
             element: React.createElement(Component),
@@ -111,7 +111,7 @@ try {
   assert.match(list, /Página 2 de 3/);
   assert.match(list, /Exportar CSV/);
   const detail = await render(
-    "/src/pages/EmendaDetail.tsx",
+    "/src/features/federal-amendments/pages/AmendmentDetail.tsx",
     {
       pathname: "/emendas/20240001",
       state: {
@@ -235,7 +235,7 @@ try {
   assert.ok(stateList.includes("/api/estaduais/export/emendas"));
   assert.ok(!stateList.includes("Nome da localidade"));
   const stateDetail = await render(
-    "/src/pages/StateAmendmentDetail.tsx",
+    "/src/features/state-amendments/pages/StateAmendmentDetail.tsx",
     {
       pathname: "/emendas-estaduais/2024/001",
       state: {

@@ -8,12 +8,12 @@ flowchart TB
   end
 
   subgraph ETL["ETL - Python (requests, SQLAlchemy)"]
-    EXTRACT["etl.extract + etl.transform<br/>emendas e documentos<br/>(filtro PB)"]
-    ENRICH["etl.enrich_documentos<br/>objeto do gasto,<br/>favorecido, valor"]
-    LDESP["etl.load_despesas<br/>etl.load_favorecidos"]
-    LTGOV["etl.load_transferegov<br/>planos de acao<br/>e empenhos"]
-    LUGS["etl.load_ugs"]
-    LPB["etl.load_pb<br/>emendas estaduais"]
+    EXTRACT["etl.federal.extract + etl.federal.transform<br/>emendas e documentos<br/>(filtro PB)"]
+    ENRICH["etl.federal.enrich_documentos<br/>objeto do gasto,<br/>favorecido, valor"]
+    LDESP["etl.federal.load_despesas<br/>etl.federal.load_favorecidos"]
+    LTGOV["etl.federal.load_transferegov<br/>planos de acao<br/>e empenhos"]
+    LUGS["etl.federal.load_ugs"]
+    LPB["etl.state<br/>emendas estaduais"]
   end
 
   subgraph DB["PostgreSQL"]

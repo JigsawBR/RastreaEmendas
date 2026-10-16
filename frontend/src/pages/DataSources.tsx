@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useSearchParams } from "react-router-dom";
-import { getAmendmentSource } from "../lib/amendment-source";
-import SourceSelector from "../components/SourceSelector";
-import { readSource, sourceLabel } from "../lib/sources";
-import { Badge, PageHeading, QueryState } from "../components/DesignSystem";
+import { getAmendmentSource } from "../shared/lib/amendment-source";
+import SourceSelector from "../shared/components/SourceSelector";
+import { readSource, sourceLabel } from "../shared/lib/sources";
+import { Badge, PageHeading, QueryState } from "../shared/components/DesignSystem";
 const years = [2023, 2024, 2025, 2026];
 export default function DataSources() {
   const [search, setSearch] = useSearchParams();
@@ -25,18 +25,17 @@ export default function DataSources() {
         })),
       ),
   });
-  const moduleName =
-    source === "federal"
-      ? "etl"
-      : source === "transferegov"
-        ? "etl.load_transferegov"
-        : "etl.load_pb";
+  const moduleName = source === "federal" ? "etl.federal"
+    : source === "transferegov" ? "etl.federal.load_transferegov"
+      : ["evidence", "siconv", "queue"].includes(source) ? "etl.evidence" : "etl.state";
+  const supportsRefresh = source !== "transferegov";
   const command =
     "python -m " +
     moduleName +
     " --years " +
     period +
-    (source === "federal" && refresh ? " --refresh" : "");
+    (source === "siconv" ? " --sources siconv" : source === "queue" ? " --sources queue" : "") +
+    (supportsRefresh && refresh ? " --refresh" : "");
   function reset() {
     setPrepared(false);
     setCopied(false);
@@ -72,8 +71,10 @@ export default function DataSources() {
           <Badge>Transferências especiais</Badge>
           <h2>Transferegov</h2>
           <p className="muted">
-            Planos de ação e empenhos. Valores de planos não comprovam aplicação
-            final pelo beneficiário.
+            Planos de ação, planos de trabalho e relatórios de gestão, com
+            despesas locais declaradas quando disponíveis. Convênios, contratos,
+            pagamentos e medições SICONV aparecem como candidatos quando falta
+            confirmar o exercício da emenda.
           </p>
           <p className="muted small">Última carga: data não registrada.</p>
         </section>
@@ -83,7 +84,11 @@ export default function DataSources() {
           <p className="muted">
             Listagem e execução estadual integradas à consulta. Identificação
             por exercício e número da emenda; valores agregados por órgão e
-            função.
+            função. O detalhe apresenta notas de empenho, liquidações e
+            pagamentos da coleta documental, com fontes, datas e lacunas.
+            Pagamentos sem exercício do empenho identificado permanecem candidatos.
+            Evidências complementares mostram convênios, contratos e entidades
+            citadas, com fonte, regra de vínculo e data de coleta.
           </p>
           <p className="muted small">Última carga: data não registrada.</p>
         </section>
@@ -179,6 +184,9 @@ export default function DataSources() {
                 <option value="federal">Portal da Transparência</option>
                 <option value="transferegov">Transferegov</option>
                 <option value="state">CODATA — Dados Abertos da Paraíba</option>
+                <option value="evidence">Evidências estaduais e transferências especiais</option>
+                <option value="siconv">SICONV — convênios e execução local</option>
+                <option value="queue">CODATA — contexto da fila de pagamentos</option>
               </select>
             </label>
             <label className="field">
@@ -199,15 +207,15 @@ export default function DataSources() {
             <label className="field">
               Modo
               <select
-                disabled={source !== "federal"}
-                value={source === "federal" && !refresh ? "cache" : "refresh"}
+                disabled={!supportsRefresh}
+                value={supportsRefresh && !refresh ? "cache" : "refresh"}
                 onChange={(e) => {
                   setRefresh(e.target.value === "refresh");
                   reset();
                 }}
               >
                 <option value="refresh">Consultar novamente a fonte</option>
-                {source === "federal" && (
+                {supportsRefresh && (
                   <option value="cache">Reutilizar o cache disponível</option>
                 )}
               </select>

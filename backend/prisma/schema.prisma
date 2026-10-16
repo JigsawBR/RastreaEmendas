@@ -2,6 +2,65 @@ generator client {
   provider = "prisma-client-js"
 }
 
+model amendment_evidence {
+  id               String   @id @db.VarChar(64)
+  origin           String   @db.VarChar(10)
+  year             Int
+  amendment_number String   @db.VarChar(30)
+  source           String   @db.VarChar(60)
+  kind             String   @db.VarChar(40)
+  status           String   @db.VarChar(20)
+  title            String
+  source_url       String
+  collected_at     DateTime @db.Timestamp(6)
+  match_basis      String
+  payload          Json     @db.Json
+
+  @@index([origin])
+  @@index([year])
+  @@index([amendment_number])
+}
+
+model evidence_import {
+  id             Int      @id @default(autoincrement())
+  origin         String   @db.VarChar(10)
+  year           Int
+  source         String   @db.VarChar(60)
+  source_count   Int
+  evidence_count Int
+  collected_at   DateTime @db.Timestamp(6)
+  scope          String
+
+  @@unique([origin, year, source])
+}
+
+model state_expense_document {
+  id               String   @id @db.VarChar(64)
+  year             Int
+  month            Int
+  amendment_number String   @db.VarChar(20)
+  kind             String   @db.VarChar(30)
+  link_status      String   @db.VarChar(20)
+  source_url       String
+  collected_at     DateTime @db.Timestamp(6)
+  payload          Json     @db.Json
+
+  @@index([year, amendment_number])
+}
+
+model state_expense_import {
+  id           Int      @id @default(autoincrement())
+  year         Int
+  month        Int
+  kind         String   @db.VarChar(30)
+  source_count Int
+  linked_count Int
+  collected_at DateTime @db.Timestamp(6)
+
+  @@unique([year, month, kind])
+  @@index([year])
+}
+
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")

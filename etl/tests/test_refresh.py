@@ -3,7 +3,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import Mock, patch
 
-from etl import extract
+from etl.federal import extract
 
 
 class RefreshTests(unittest.TestCase):

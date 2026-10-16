@@ -3,7 +3,7 @@ from types import SimpleNamespace
 
 from sqlalchemy import Column, Integer, MetaData, String, Table, create_engine, select
 
-from etl.load import upsert_rows
+from etl.shared.load import upsert_rows
 
 
 class UpsertTests(unittest.TestCase):

@@ -10,21 +10,26 @@ controllers, services e repositories.
 ```text
 React ──HTTP──> API Node.js ──ORM──> PostgreSQL <──carga── ETL Python
                     │
-                    ├── amendments
-                    ├── state-amendments
-                    ├── execution
-                    ├── traceability
-                    ├── locations
-                    ├── organizations
-                    ├── parliamentarians
-                    ├── analytics
-                    └── exports
+                    ├── federal-amendments/
+                    │   ├── amendments
+                    │   ├── execution
+                    │   ├── traceability
+                    │   ├── locations
+                    │   ├── organizations
+                    │   ├── parliamentarians
+                    │   ├── analytics
+                    │   └── exports
+                    └── state-amendments
 ```
 
 O PostgreSQL é o contrato de integração entre a API e o ETL. O ETL não importa
 código do back-end, e o back-end não executa etapas do ETL durante requisições.
 
 ## Módulos do back-end
+
+As capacidades federais ficam em `backend/src/modules/federal-amendments/`.
+O módulo estadual fica em `backend/src/modules/state-amendments/`.
+A organização interna por capacidade e camada continua a mesma.
 
 - `amendments`: consulta e filtros das emendas e de suas alocações.
 - `state-amendments`: consulta CODATA, vínculo por ano e número, agregações e exportação estadual.
@@ -76,7 +81,7 @@ a dados; `EmendasList` apresenta o formulário e `AmendmentResults` renderiza
 os resultados. Visão geral e cobertura reutilizam o mesmo registro de fontes.
 A consulta federal de listagem e exportação compartilha `findAmendments` e
 o mesmo construtor de filtros. O CSV comum fica em `shared/serialization`.
-Os três comandos ETL reutilizam `etl/years.py`.
+Os três comandos ETL reutilizam `etl/shared/years.py`.
 
 - **SRP:** rota estadual traduz HTTP, serviço coordena a consulta, domínio calcula valores,
   adaptador Prisma consulta o banco e serializador produz CSV.
@@ -98,7 +103,7 @@ contêiner de injeção, classes base universais ou abstrações sem consumidor.
 
 ## Padrões GoF utilizados
 
-**Strategy:** `frontend/src/lib/amendment-source.ts` encapsula as variantes
+**Strategy:** `frontend/src/shared/lib/amendment-source.ts` encapsula as variantes
 federal e estadual; o hook e as telas selecionam uma implementação pelo
 contrato `AmendmentSourceStrategy`.
 

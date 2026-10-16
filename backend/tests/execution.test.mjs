@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { groupExecutionValues } from "../dist/modules/execution/application/group-execution-values.js";
+import { groupExecutionValues } from "../dist/modules/federal-amendments/execution/application/group-execution-values.js";
 
 test("distribuição distingue valores ausentes, zero e totais parciais por fase", () => {
   const document = (stage, committed, paid, unit = "123456") => ({

@@ -20,6 +20,7 @@ export type StateListing = {
   tipo_entidade: string | null;
 };
 export type StateExecution = {
+  fonte_recurso?: string | null;
   id: number;
   ano: number;
   numero_emenda: string;
@@ -34,6 +35,24 @@ export type StateExecution = {
   valor_empenhado: Amount;
   valor_liquidado: Amount;
   valor_pago: Amount;
+};
+export type StateDocument = {
+  id: string;
+  year: number;
+  month: number;
+  amendment_number: string;
+  kind: string;
+  link_status: string;
+  source_url: string;
+  collected_at: Date;
+  payload: unknown;
+};
+export type StateImport = {
+  month: number;
+  kind: string;
+  source_count: number;
+  linked_count: number;
+  collected_at: Date;
 };
 export interface StateAmendmentRepository {
   list(
@@ -50,5 +69,6 @@ export interface StateAmendmentRepository {
   find(
     year: number,
     number: string,
-  ): Promise<{ listing: StateListing; executions: StateExecution[] } | null>;
+  ): Promise<{ listing: StateListing; executions: StateExecution[];
+    documents?: StateDocument[]; imports?: StateImport[] } | null>;
 }

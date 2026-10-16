@@ -18,6 +18,7 @@ dist/
 # Documento do TCC (binarios)
 TCC I.docx
 tcc1_final_word.pdf
+docs/tcc/*.pdf
 
 # Configuracao local do Claude Code
 .claude/

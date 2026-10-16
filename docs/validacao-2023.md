@@ -51,7 +51,7 @@ A carga federal reutilizou as listagens em cache e revalidou os valores das
 81 emendas na API. O detalhamento dos documentos foi consultado na API nesta
 execução. Para renovar integralmente as listagens e os documentos associados,
 use `python -m etl --years 2023 --refresh` e depois
-`python -m etl.enrich_documentos --years 2023`.
+`python -m etl.federal.enrich_documentos --years 2023`.
 
 Localidades “Nacional” e “MÚLTIPLO” não permitem atribuir o gasto a uma UF pelo
 endpoint de emendas. Por isso, 81 é a quantidade do recorte explícito da CGU,

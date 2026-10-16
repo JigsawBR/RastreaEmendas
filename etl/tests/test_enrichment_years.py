@@ -2,7 +2,7 @@ import unittest
 
 from sqlalchemy import create_engine, text
 
-from etl.enrich_documentos import fetch_pending
+from etl.federal.enrich_documentos import fetch_pending
 
 
 class EnrichmentYearTests(unittest.TestCase):

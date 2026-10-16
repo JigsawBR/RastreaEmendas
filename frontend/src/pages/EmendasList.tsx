@@ -1,9 +1,9 @@
-import { useAmendmentSearch } from "../hooks/useAmendmentSearch";
-import { sourceLabel } from "../lib/sources";
-import { formatInt } from "../lib/format";
-import { Badge, PageHeading, QueryState } from "../components/DesignSystem";
-import SourceSelector from "../components/SourceSelector";
-import AmendmentResults from "../components/AmendmentResults";
+import { useAmendmentSearch } from "../shared/hooks/useAmendmentSearch";
+import { sourceLabel } from "../shared/lib/sources";
+import { formatInt } from "../shared/lib/format";
+import { Badge, PageHeading, QueryState } from "../shared/components/DesignSystem";
+import SourceSelector from "../shared/components/SourceSelector";
+import AmendmentResults from "../shared/components/AmendmentResults";
 export default function EmendasList() {
   const {
     source,

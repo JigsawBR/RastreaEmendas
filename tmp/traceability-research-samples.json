@@ -1,0 +1,352 @@
+[
+  {
+    "url": "https://api.dados.pb.gov.br/api/v1/despesas/ordem_cronologica_pagamentos?ano=2024&mes=12&numeroEmpenho=6595&cnpjCpfCredor=10603081000178&per_page=10",
+    "status": 404
+  },
+  {
+    "url": "https://api-publica.transferegov.gestao.gov.br/especiais/openapi.json",
+    "status": 200,
+    "endpoints": [
+      "/plano-trabalho-analise-historico-especiais",
+      "/planos-acao-especiais",
+      "/planos-acao-historico-especiais",
+      "/beneficiarios-especiais",
+      "/planos-trabalho-especiais",
+      "/planos-trabalho-analises-especiais",
+      "/relatorios-gestao-novos-especiais",
+      "/relatorios-gestao-analise-especiais",
+      "/relatorios-gestao-documento-liquidacao-especiais",
+      "/relatorios-gestao-especiais",
+      "/documentos-habeis-especiais",
+      "/ordens-pagamentos-ordens-bancarias-especiais",
+      "/executores-especiais",
+      "/meta-especiais",
+      "/gestao-financeira-lancamentos-especiais",
+      "/gestao-financeira-subtransacoes-especiais",
+      "/planos-trabalho-historico",
+      "/saldo-conta-gestao-financeira-especiais"
+    ]
+  },
+  {
+    "url": "https://api-publica.transferegov.gestao.gov.br/parcerias/openapi.json",
+    "status": 200,
+    "endpoints": [
+      "/proposta",
+      "/meta-proposta",
+      "/item-proposta",
+      "/analise-proposta",
+      "/proposta-resultado-indicador",
+      "/distribuicao-recurso-proposta",
+      "/documento-habil",
+      "/ordem-pagamento",
+      "/beneficiario_emenda_parlamentar",
+      "/indicacao-beneficiario-emenda-parlamentar"
+    ]
+  },
+  {
+    "url": "https://api-publica.transferegov.gestao.gov.br/downloads/dadosgov/?restype=container&comp=list",
+    "status": 200,
+    "files": [
+      "apoiadores_emendas_programas.zip",
+      "siconv_acomp_obras_contratos_medicoes_modulo_empresas.zip",
+      "siconv_contrato.zip",
+      "siconv_contrato_cipi.zip",
+      "siconv_convenio.zip",
+      "siconv_cronograma_desembolso.zip",
+      "siconv_desembolso.zip",
+      "siconv_emenda.zip",
+      "siconv_empenho_desembolso.zip",
+      "siconv_etapa_crono_fisico.zip",
+      "siconv_ingresso_contrapartida.zip",
+      "siconv_inst_cont_contratos_lotes_empresas_modulo_empresas.zip",
+      "siconv_inst_cont_metas_submetas_po_modulo_empresas.zip",
+      "siconv_inst_cont_proposta_aio_modulo_empresas.zip",
+      "siconv_itens_licitacao.zip",
+      "siconv_justificativas_proposta.zip",
+      "siconv_licitacao.zip",
+      "siconv_meta_crono_fisico.zip",
+      "siconv_obtv_convenente.zip",
+      "siconv_pagamento.zip",
+      "siconv_pagamento_tributo.zip",
+      "siconv_programa_proposta.zip",
+      "siconv_projeto_basico_metas_modulo_empresas.zip",
+      "siconv_projeto_basico_proposta_modulo_empresas.zip",
+      "siconv_projeto_basico_submetas_modulo_empresas.zip",
+      "siconv_proposta.zip",
+      "siconv_proposta_cancelada.zip",
+      "siconv_proposta_formalizacao_pac.zip",
+      "siconv_proposta_selecao_pac.zip",
+      "siconv_solicitacao_ajuste_pt.zip",
+      "siconv_solicitacao_alteracao.zip",
+      "siconv_solicitacao_rendimento_aplicacao.zip",
+      "siconv_vrpl_lotes_fornecedores_licitacao_modulo_empresas.zip",
+      "siconv_vrpl_metas_submetas_modulo_empresas.zip",
+      "siconv_vrpl_proposta_licitacao_modulo_empresas.zip"
+    ]
+  },
+  {
+    "url": "https://api-publica.transferegov.gestao.gov.br/parcerias/beneficiario_emenda_parlamentar?sg_uf_beneficiario_emenda=PB&aa_emenda=2024&tamanho_da_pagina=2",
+    "status": 200,
+    "topKeys": [
+      "data",
+      "total_pages",
+      "total_items",
+      "page_number",
+      "page_size"
+    ],
+    "sample": []
+  },
+  {
+    "url": "https://api-publica.transferegov.gestao.gov.br/parcerias/proposta?sg_uf_recebedor=PB&ano_proposta=2024&tamanho_da_pagina=2",
+    "status": 200,
+    "topKeys": [
+      "data",
+      "total_pages",
+      "total_items",
+      "page_number",
+      "page_size"
+    ],
+    "sample": [
+      {
+        "id_proposta": 738,
+        "id_programa": 7,
+        "nm_ente_recebedor": "INSTITUTO SOCIOEDUCACIONAL E CULTURAL - ISEC",
+        "sg_uf_recebedor": "PB",
+        "id_programa_unidade_gestora": 2,
+        "ds_problema_proposta": "As ações de educação ambiental focadas na conscientização sobre o descarte adequado de resíduos sólidos são essenciais para resolver diversos problemas ambientais, sociais e de saúde. Entre os principais problemas que podem ser resolvidos ou amenizados com essas ações, destacamos: 1. Poluição Ambiental: O descarte incorreto de resíduos, especialmente materiais não biodegradáveis, como plásticos, pode causar poluição significativa nos ecossistemas. A conscientização sobre a separação e o destino correto dos resíduos reduz a poluição do solo, da água e do ar, promovendo a preservação dos recursos naturais. 2. Problemas de Saúde Pública: O lixo acumulado atrai animais como ratos, mosquitos e outros insetos, que são transmissores de doenças como leptospirose, dengue, zika, chikungunya, entre outras.3. Desperdício de Recursos Naturais: A remoção de recursos naturais, como madeira, petróleo e minerais, para fabricar novos produtos consome grandes quantidades de energia e recursos. Quando materiais recicláveis são descartados de maneira incorreta, é necessário extrair mais desses recursos, o que gera um impacto ambiental negativo.4. Falta de Conscientização e Participação Social: A falta de informações leva à falta de envolvimento da população em ações de gestão de resíduos, como a coleta seletiva. Isso resulta em práticas de descarte, como o lixo espalhado pelas ruas e terrenos.",
+        "situacao_proposta": "Em Elaboração",
+        "in_situacao_analise": null,
+        "ds_resultado_esperado_proposta": null,
+        "in_situacao_antes_inativar": null,
+        "in_situacao_analise_antes_inativar": null,
+        "ds_publico_alvo_proposta": "As ações serão realizadas em escolas, associações e OSCs da capital, serão concentradas nos bairros da Zona Sul da capital, tais como: Ernesto Geisel (13.638 habitantes), João Paulo II (19.936 habitantes), Gramame (64.890 habitantes), Costa e Silva (6.935 habitantes), José Américo (17.539 habitantes), Funcionários (14.606 habitantes) e Grotão (4.776 habitantes).A população estimada de João Pessoa em 2024 é 888.679 pessoas e a rede municipal de ensino conta com 70 mil alunos matriculados no ensino Fundamental I e II.",
+        "ano_proposta": 2024
+      },
+      {
+        "id_proposta": 242,
+        "id_programa": 6,
+        "nm_ente_recebedor": "FUNDACAO ASSISTENCIAL DA PARAIBA- FAP",
+        "sg_uf_recebedor": "PB",
+        "id_programa_unidade_gestora": null,
+        "ds_problema_proposta": "O projeto visa abordar a formação de instruções pós-operatórias, uma complicação comum e grave que ocorre após diversas cirurgias. Essas instruções são detalhadas pela formação anormal de conexões fibróticas entre órgãos e tecidos, levando a dor crônica, mobilidade reduzida e aumentando o risco de reoperações. Essa condição resulta em elevada morbidade e custos médicos, uma vez que prolonga o tempo de hospitalização e requer intervenções cirúrgicas adicionais, impactando qualidade de vida dos pacientes.Atualmente, as opções de barreiras antiaderentes disponíveis no mercado muitas vezes são caras, complexas de aplicar e desativar preparação pré-operatória. Essa realidade limita a acessibilidade e a eficácia das soluções existentes, especialmente em sistemas de saúde com recursos limitados, como o SUS. Assim, há uma demanda crescente por materiais que não apenas evitem o treinamento de aderência, mas que também sejam seguros para o organismo, apresentando baixa toxicidadeAlém disso, existe a necessidade de desenvolver biomateriais que sejam facilmente aplicáveis durante os procedimentos necessários, que possam ser armazenados em temperatura ambiente e que formem hidrogéis in situ. Esses materiais inovadores têm o potencial de otimizar os resultados cirúrgicos e melhorar a recuperação dos pacientesPor fim, a literatura ainda é escassa de estudos focados em novos biomateriais que utilizam simuladores de O-carboximetilquitosana, ácido hialurônico oxidado e pigmentos derivados de genipina, limitando as opções de inovação nesse campo. Portanto, o projeto proposto é essencial para o desenvolvimento de um biomaterial eficaz e acessível que previna a formação de instruções pós-operatórias, melhorando os resultados cirúrgicos e a qualidade.",
+        "situacao_proposta": "Rejeitada",
+        "in_situacao_analise": null,
+        "ds_resultado_esperado_proposta": "Os resultados esperados deste estudo estão diretamente relacionados às hipóteses formuladas sobre o potencial do material em pó O-carboximetilquitosana (O-CMCS), ácido hialurônico oxidado (OHA) e do pigmento reticulante à base de genipina e ácido glutâmico (G/GluP) para a criação de um hidrogelviscoelástico que atende às necessidades de aplicações biomédicas, especialmente como barreira para prevenir aderências pós-operatórias. Espera-se que o estudo resulte em uma visão bem-sucedida de um pó que seja economicamente viável, mantendo propriedades específicas para aplicações clínicas. A utilização de O-CMCS e OHA, combinada com o pigmento G/GluP, visa criar um material que não apenas seja acessível, mas também eficaz na absorção rápida de fluidos corporais e na formação de uma matriz de pó resistente e adesiva. Um dos principais resultados esperados é a rápida gelificação do pó, o que deve ser confirmado por meio de testes de tempo de gelificação. A capacidade do pó de se autorreparar é outra característica desejada, permitindo que o material mantenha sua integridade estrutural após possíveis danos. Espera-se que essas propriedades contribuam para a eficácia do material em ambientes clínicos, onde a integridade do pó é fundamental. Os resultados esperados incluem um comportamento reológico pseudoplástico do pó, o que é essencial para aplicações biomédicas, pois indica que o material se tornará menos viscoso sob estresse, facilitando sua aplicação e procedimento durante procedimentos cirúrgicos. Essa propriedade permite uma melhor adaptação do pó às superfícies biológicas. Espera-se que o pó apresente grau de intumescimento controlavél, permitindo que ele retenha quantidades suficiente de fluido. Isso é importante para a promoção de um ambiente favorável à cicatrização, uma vez que a hidratação é neessária para os processos biológicos de acessórios de tecidos. Os testes de biodegradação devem demonstrar que o pó O-CMCS/OHA-G/GluP possui uma estabilidade enquanto se degrada. Essa característica permite que o material funcione como uma barreira física inicial, promovendo a cicatrização sem deixar resíduos indesejados no organismo. É esperado que o material demonstre uma atividade antimicrobiana, inibindo o crescimento bacteriano em ambientes cirúrgicos. Isso é essencial para prevenir infecções e complicações pós-operatórias, aumentando assim a segurança do paciente. Os resultados de citotoxicidade devem indicar que os pós não são tóxicos para as células L929, reforçando a biocompatibilidade do material. Esse aspecto é fundamental para a acessibilidade do material pelo organismo e sua utilização segura em aplicações clínicas. O tempo de coagulação deve ser reduzido significativamente, comprovando a capacidade hemostática do pó em controlar sangramentos durante procedimentos cirúrgicos. Por fim, espera-se que o teste de adesão por tração demonstre a resistência mecânica do pó, confirmando sua robustez para aplicações cirúrgicas. Essas características fazem do pó O-CMCS/OHA-G/GluP um candidato promissor para uso como barreira de aderências pós-operatórias, oferecendo uma solução avançada para controle de sangramentos e destruição do processo de recuperação.",
+        "in_situacao_antes_inativar": null,
+        "in_situacao_analise_antes_inativar": null,
+        "ds_publico_alvo_proposta": "Pessoas que demandem atenção oncológica",
+        "ano_proposta": 2024
+      }
+    ]
+  },
+  {
+    "url": "https://api.dados.pb.gov.br/api/v1/despesas/ordem_cronologica_pagamentos?ano=2024&mes=12&per_page=2",
+    "status": 200,
+    "sample": [
+      {
+        "ano": 2024,
+        "mes": 12,
+        "posicao": "621",
+        "contrato": "SN         ",
+        "liquidacao": "1132",
+        "numeroEmpenho": "1163",
+        "numeroAp": null,
+        "codigoUnidadeGestora": "190401",
+        "descricaoUnidadeGestora": "CODATA - CIA DE PROCESSAMENTO DE DADOS DA PARAIBA",
+        "codigoFonteRecursos": "50100",
+        "fonteRecursos": "OUTROS RECURSOS NAO VINCULADOS",
+        "codigoCategoria": 3,
+        "categoria": "PRESTAÇÃO DE SERVIÇOS",
+        "codigoStatus": 3,
+        "status": "ANULAÇÃO DE LD",
+        "cnpjCpfCredor": null,
+        "nomeCredor": "",
+        "prioritaria": "NÃO",
+        "codigoJustificativa": 0,
+        "justificativa": "NÃO",
+        "cnpjOrgao": "09189499000100",
+        "tipoPoder": "PODER EXECUTIVO",
+        "dataInsercao": "2024-12-30",
+        "dataExecucao": "2025-01-07",
+        "valorPago": 0
+      },
+      {
+        "ano": 2024,
+        "mes": 12,
+        "posicao": "53",
+        "contrato": "SN         ",
+        "liquidacao": "2271",
+        "numeroEmpenho": "2516",
+        "numeroAp": null,
+        "codigoUnidadeGestora": "310301",
+        "descricaoUnidadeGestora": "COMPANHIA DOCAS DA PARAIBA",
+        "codigoFonteRecursos": "50100",
+        "fonteRecursos": "OUTROS RECURSOS NAO VINCULADOS",
+        "codigoCategoria": 3,
+        "categoria": "PRESTAÇÃO DE SERVIÇOS",
+        "codigoStatus": 3,
+        "status": "ANULAÇÃO DE LD",
+        "cnpjCpfCredor": null,
+        "nomeCredor": "",
+        "prioritaria": "NÃO",
+        "codigoJustificativa": 0,
+        "justificativa": "NÃO",
+        "cnpjOrgao": "02343132000141",
+        "tipoPoder": "PODER EXECUTIVO",
+        "dataInsercao": "2024-12-18",
+        "dataExecucao": "2025-01-06",
+        "valorPago": 0
+      }
+    ],
+    "pagination": {
+      "total": 24556,
+      "pagina": 1,
+      "itens_por_pagina": 2,
+      "total_paginas": 12278
+    }
+  },
+  {
+    "url": "https://api.dados.pb.gov.br/api/v1/despesas/ordem_cronologica_pagamentos_rp?ano=2024&mes=12&per_page=2",
+    "status": 404
+  },
+  {
+    "url": "https://api.dados.pb.gov.br/api/v1/convenios/estado_municipios?ano=2024&per_page=2",
+    "status": 200,
+    "sample": [
+      {
+        "ano": 2024,
+        "mes": 12,
+        "dataInicio": "2024-12-31",
+        "dataTermino": "2025-12-30",
+        "numeroConvenio": "0025/2024",
+        "numeroCadastroCGE": "25-80015-9",
+        "nomeConcedente": "FUNDO DE DESENVOLVIMENTO DO ESTADO DA PARAÍBA",
+        "nomeConvenente": "INSTITUTO VEM CUIDAR DE MIM",
+        "nomeMunicipio": "JOÃO PESSOA",
+        "objeto": "ENTIDADES FILANTRÓPICAS",
+        "detalheObjeto": "CUSTEAR O DESENVOLVIMENTO DE ATIVIDADE DE FORMAÇÃO PROFISSIONAL E CURSOS DE CAPACITAÇÃO PARA 100 ADOLESCENTES E JOVENS, DE IDADES ENTRE 16 A 21 ANOS, NAS ÁREAS DE TECNOLOGIA, NOS TERMOS DA EMENDA IMPOSITIVA PARLAMENTAR Nº 576/2024 (LOA 2024), DE AUTORIA DA PARLAMENTAR TANILSON SOARES.",
+        "tipoInstrumento": "TERMO DE FOMENTO",
+        "valorConcedente": 149910,
+        "valorContrapartida": 0,
+        "valorAditivos": 0,
+        "valorTotal": 149910,
+        "documentoConvenio": "http://www.cge.pb.gov.br/gea/Uploads/Convenios/Convenios023707.pdf"
+      },
+      {
+        "ano": 2024,
+        "mes": 12,
+        "dataInicio": "2024-12-30",
+        "dataTermino": "2025-12-30",
+        "numeroConvenio": "0007/2024",
+        "numeroCadastroCGE": "25-80032-9",
+        "nomeConcedente": "SECRETARIA DE ESTADO DA JUVENTUDE, ESPORTE E LAZER",
+        "nomeConvenente": "ASSOCIAÇÃO DESPORTIVA CLUBE FÚRIA",
+        "nomeMunicipio": "JOÃO PESSOA",
+        "objeto": "PROG. DE APOIO AO ESPORTE",
+        "detalheObjeto": "REALIZAÇÃO DO PROJETO “ESPORTE: DESPERTAR DA CIDADANIA”. ",
+        "tipoInstrumento": "TERMO DE FOMENTO",
+        "valorConcedente": 160000,
+        "valorContrapartida": 0,
+        "valorAditivos": 0,
+        "valorTotal": 160000,
+        "documentoConvenio": "http://www.cge.pb.gov.br/gea/Uploads/Convenios/Convenios023693.pdf"
+      }
+    ],
+    "pagination": {
+      "page": 1,
+      "pages": 478,
+      "per_page": 2,
+      "total": 955
+    }
+  },
+  {
+    "url": "https://api.dados.pb.gov.br/api/v1/compras/contratos?anoInicioVigencia=2024&registroCge=24121772&per_page=2",
+    "status": 200,
+    "sample": [
+      {
+        "anoInicioVigencia": 2024,
+        "registroCge": "24-12177-2",
+        "numeroContrato": "0565/2024",
+        "numeroProcessoLicitacao": "25.000.021444.2024",
+        "nomeOrgao": "SECRETARIA DE ESTADO DA SAUDE - SES",
+        "siglaOrgao": "SES - 252201",
+        "codigoOrgao": "252201",
+        "municipio": "JOÃO PESSOA",
+        "objeto": "CONTRATAÇÃO DE SERVIÇOS DE OBRA DA AMPLIAÇÃO DO LABORATÓRIO ",
+        "objetoComplemento": "",
+        "contratado": "EXA ENGENHARIA E ARQUITETURA LTDA",
+        "cnpjCpf": "07.870.719/0001-22",
+        "dataAssinatura": "2024-11-25",
+        "dataPublicacao": "2024-11-27",
+        "dataInicioVigencia": "2024-11-25",
+        "dataTerminoVigencia": "2025-11-25",
+        "valorOriginal": 71924.83,
+        "valorAditivos": 17369.59,
+        "valorApostilas": 0,
+        "valorTotal": 89294.42,
+        "emergencial": "NÃO",
+        "urlContrato": "https://pncp.gov.br/app/contratos/08778268000160/2024/318",
+        "aditivo": "[{\"motivo_aditivo\":\"Aditivo - Acréscimo/Supressão de Quantitativo com ou sem prazo\",\"num_aditivo\":\"001\",\"data_inicio\":\"2024-11-25\",\"data_terminio\":\"2026-11-25\",\"tempo_em_meses\":24,\"valor\":17369.59,\"objeto\":\"CONTRATAÇÃO DE SERVIÇOS DE OBRA DA AMPLIAÇÃO DO LABORATÓRIO DE FRACIONAMENTO DO HEMOCENTRO DE JOÃO PESSOA/PB\",\"data_assinatura\":\"2025-06-18\",\"data_publicacao_sis\":\"2024-11-27 00:00:00\",\"url\":\"https://pncp.gov.br/app/contratos/08778268000160/2024/318\"},{\"motivo_aditivo\":\"Apostilamento - Atualização de RO\",\"num_aditivo\":\"001\",\"data_inicio\":\"2024-11-25\",\"data_terminio\":\"2025-11-25\",\"tempo_em_meses\":12,\"valor\":0.0,\"objeto\":\"CONTRATAÇÃO DE SERVIÇOS DE OBRA DA AMPLIAÇÃO DO LABORATÓRIO DE FRACIONAMENTO DO HEMOCENTRO DE JOÃO PESSOA/PB\",\"data_assinatura\":\"2025-02-10\",\"data_publicacao_sis\":\"2026-08-18 00:00:00\",\"url\":\"https://pncp.gov.br/api/pncp/v1/orgaos/08778268000160/contratos/2024/318/termos/1/arquivos/1\"}]",
+        "dataPortaria": "2024-11-26",
+        "numeroPortariaGestor": "00622023"
+      },
+      {
+        "anoInicioVigencia": 2024,
+        "registroCge": "24-12177-2",
+        "numeroContrato": "0565/2024",
+        "numeroProcessoLicitacao": "25.000.021444.2024",
+        "nomeOrgao": "SECRETARIA DE ESTADO DA SAUDE - SES",
+        "siglaOrgao": "SES - 253601",
+        "codigoOrgao": "253601",
+        "municipio": "JOÃO PESSOA",
+        "objeto": "CONTRATAÇÃO DE SERVIÇOS DE OBRA DA AMPLIAÇÃO DO LABORATÓRIO ",
+        "objetoComplemento": "",
+        "contratado": "EXA ENGENHARIA E ARQUITETURA LTDA",
+        "cnpjCpf": "07.870.719/0001-22",
+        "dataAssinatura": "2024-11-25",
+        "dataPublicacao": "2024-11-27",
+        "dataInicioVigencia": "2024-11-25",
+        "dataTerminoVigencia": "2025-11-25",
+        "valorOriginal": 71924.83,
+        "valorAditivos": 17369.59,
+        "valorApostilas": 0,
+        "valorTotal": 89294.42,
+        "emergencial": "NÃO",
+        "urlContrato": "https://pncp.gov.br/app/contratos/08778268000160/2024/318",
+        "aditivo": "[{\"motivo_aditivo\":\"Aditivo - Acréscimo/Supressão de Quantitativo com ou sem prazo\",\"num_aditivo\":\"001\",\"data_inicio\":\"2024-11-25\",\"data_terminio\":\"2026-11-25\",\"tempo_em_meses\":24,\"valor\":17369.59,\"objeto\":\"CONTRATAÇÃO DE SERVIÇOS DE OBRA DA AMPLIAÇÃO DO LABORATÓRIO DE FRACIONAMENTO DO HEMOCENTRO DE JOÃO PESSOA/PB\",\"data_assinatura\":\"2025-06-18\",\"data_publicacao_sis\":\"2024-11-27 00:00:00\",\"url\":\"https://pncp.gov.br/app/contratos/08778268000160/2024/318\"},{\"motivo_aditivo\":\"Apostilamento - Atualização de RO\",\"num_aditivo\":\"001\",\"data_inicio\":\"2024-11-25\",\"data_terminio\":\"2025-11-25\",\"tempo_em_meses\":12,\"valor\":0.0,\"objeto\":\"CONTRATAÇÃO DE SERVIÇOS DE OBRA DA AMPLIAÇÃO DO LABORATÓRIO DE FRACIONAMENTO DO HEMOCENTRO DE JOÃO PESSOA/PB\",\"data_assinatura\":\"2025-02-10\",\"data_publicacao_sis\":\"2026-08-18 00:00:00\",\"url\":\"https://pncp.gov.br/api/pncp/v1/orgaos/08778268000160/contratos/2024/318/termos/1/arquivos/1\"}]",
+        "dataPortaria": "2024-11-26",
+        "numeroPortariaGestor": "00622023"
+      }
+    ],
+    "pagination": {
+      "total": 2,
+      "pagina": 1,
+      "itens_por_pagina": 2,
+      "total_paginas": 1
+    }
+  },
+  {
+    "url": "https://api-publica.transferegov.gestao.gov.br/especiais/relatorios-gestao-especiais?id_plano_acao=67971&tamanho_da_pagina=2",
+    "status": 200,
+    "topKeys": [
+      "data",
+      "total_pages",
+      "total_items",
+      "page_number",
+      "page_size"
+    ],
+    "sample": []
+  },
+  {
+    "url": "https://api-publica.transferegov.gestao.gov.br/especiais/relatorios-gestao-novos-especiais?id_plano_acao=67971&tamanho_da_pagina=2",
+    "status": 200,
+    "topKeys": [
+      "data",
+      "total_pages",
+      "total_items",
+      "page_number",
+      "page_size"
+    ],
+    "sample": []
+  }
+]

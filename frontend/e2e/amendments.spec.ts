@@ -1,5 +1,30 @@
 import { test, expect } from "@playwright/test";
 import { readFile } from "node:fs/promises";
+
+test("evidências distinguem vínculo, candidato, declaração e escopo consultado", async ({ page, request }, testInfo) => {
+  await page.goto("/emendas?origem=estadual&ano=2024");
+  await page.getByRole("link", { name: /Ver detalhe/ }).nth(3).click();
+  const panel = page.locator(".evidence-panel");
+  await expect(panel.getByText("Instituto E2E Convenente", { exact: true })).toBeVisible();
+  await expect(panel.getByText("Vínculo confirmado", { exact: true })).toBeVisible();
+  await expect(panel.getByText("Candidato", { exact: true })).toBeVisible();
+  await expect(panel.locator('a[href^="javascript:"]')).toHaveCount(0);
+  await panel.getByLabel("Tipo de evidência").selectOption("agreement");
+  await expect(panel.getByText("1 evidências exibidas")).toBeVisible();
+  await expect(panel.getByText("Entidade E2E citada no objeto", { exact: true })).toHaveCount(0);
+  await panel.getByText("Cobertura das fontes consultadas", { exact: true }).click();
+  await expect(panel.getByText(/Convênios 2024; referência explícita/)).toBeVisible();
+  await panel.screenshot({ path: `test-results/evidence-state-${testInfo.project.name}.png` });
+  const response = await request.get("/api/evidencias/state/2024/0004");
+  const data = await response.json();
+  expect(data.evidencias).toHaveLength(2);
+  expect((await request.get("/api/evidencias/state/2024/9999")).status()).toBe(404);
+  await page.goto("/emendas/202499900001");
+  await expect(page.locator(".evidence-panel").getByText("Declarado na fonte", { exact: true })).toBeVisible();
+  await expect(page.getByText("Fornecedor E2E Local", { exact: true })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.screenshot({ path: "test-results/evidence-panel.png", fullPage: true });
+});
 test("consulta estadual aplica filtros, exporta CSV e preserva retorno", async ({
   page,
 }) => {
@@ -30,7 +55,7 @@ test("consulta estadual aplica filtros, exporta CSV e preserva retorno", async (
     page.getByRole("heading", { name: "Emenda estadual 0001", exact: true }),
   ).toBeVisible();
   await expect(
-    page.getByText("RF-08 · não avaliável nesta base"),
+    page.getByText("RF-08 · 40% dos critérios documentados"),
   ).toBeVisible();
   await expect(
     page.getByText("Pagamento informado · soma parcial"),
@@ -43,6 +68,24 @@ test("consulta estadual aplica filtros, exporta CSV e preserva retorno", async (
   await expect(
     page.getByRole("heading", { name: "1 emendas encontradas" }),
   ).toBeVisible();
+});
+
+test("trilha estadual exibe evidências, anulações e vínculos candidatos", async ({ page }) => {
+  await page.goto("/emendas-estaduais/2024/0004");
+  await expect(page.getByRole("heading", { name: "Caminho do recurso público" })).toBeVisible();
+  await expect(page.getByText(/Solicitante original não identificado/)).toBeVisible();
+  await expect(page.getByText(/Pagamento não comprova entrega física/)).toBeVisible();
+  await expect(page.getByText("RF-08 · 60% dos critérios documentados")).toBeVisible();
+  await expect(page.getByText("Vínculo candidato — exercício a verificar")).toBeVisible();
+  await expect(page.getByText("Contrato E2E", { exact: true })).toBeVisible();
+  await expect(page.getByText("ANULAÇÃO TOTAL", { exact: false })).toBeVisible();
+  await page.screenshot({ path: "test-results/state-trail-desktop.png", fullPage: true });
+  await page.getByLabel("Filtrar documentos por fase").selectOption("payment");
+  await expect(page.getByText("Contrato E2E", { exact: true })).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "Pagamento · 123" })).toBeVisible();
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.screenshot({ path: "test-results/state-trail-mobile.png", fullPage: true });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });
 test("paginação e troca de origem preservam a consulta coerente", async ({
   page,
@@ -93,7 +136,7 @@ test("ausência, zero e identidade por exercício são distintos", async ({
   await expect(page.locator(".metrics")).not.toContainText("Não informado");
   await page.goto("/emendas-estaduais/2025/0001");
   await expect(
-    page.getByText("Beneficiário 2025 E2E", { exact: false }),
+    page.getByText("Beneficiário 2025 E2E", { exact: true }),
   ).toBeVisible();
 });
 test("resumo, cobertura e exercício sem registros", async ({ page }) => {

@@ -6,10 +6,10 @@ import "./index.css";
 import App from "./App.tsx";
 import Home from "./pages/Home.tsx";
 import EmendasList from "./pages/EmendasList.tsx";
-import EmendaDetail from "./pages/EmendaDetail.tsx";
-import Municipios from "./pages/Municipios.tsx";
+import EmendaDetail from "./features/federal-amendments/pages/AmendmentDetail.tsx";
+import Municipios from "./features/federal-amendments/pages/Municipalities.tsx";
 import DataSources from "./pages/DataSources.tsx";
-import StateAmendmentDetail from "./pages/StateAmendmentDetail.tsx";
+import StateAmendmentDetail from "./features/state-amendments/pages/StateAmendmentDetail.tsx";
 
 const queryClient = new QueryClient({
   defaultOptions: {

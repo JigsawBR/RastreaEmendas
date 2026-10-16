@@ -131,6 +131,8 @@ test("API estadual filtra, pagina, exporta e distingue a identidade por exercíc
     originals.push([model, method, model[method]]);
     model[method] = fn;
   }
+  stub(prisma.state_expense_document, "findMany", async () => []);
+  stub(prisma.state_expense_import, "findMany", async () => []);
   stub(
     prisma.emenda_estadual,
     "count",

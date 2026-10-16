@@ -9,6 +9,7 @@ import {
   stateIdentity,
   sumStateValues,
 } from "../domain/state-values.js";
+import { buildStateTrail } from "../domain/state-trail.js";
 export function createStateAmendmentService(
   repository: StateAmendmentRepository,
 ) {
@@ -89,7 +90,7 @@ export function createStateAmendmentService(
     async detail(ano: number, number: string) {
       const result = await repository.find(ano, number);
       if (!result) return null;
-      const { listing, executions: rows } = result;
+      const { listing, executions: rows, documents, imports } = result;
       return {
         ano,
         numeroEmenda: listing.numero_emenda,
@@ -120,12 +121,7 @@ export function createStateAmendmentService(
             row.valor_liquidado === null ? null : Number(row.valor_liquidado),
           valorPago: row.valor_pago === null ? null : Number(row.valor_pago),
         })),
-        rastreabilidade: {
-          avaliavel: false,
-          score: null,
-          motivo:
-            "A base estadual carregada contém execução agregada, sem documentos individualizados das três fases para aplicar o RF-08.",
-        },
+        ...buildStateTrail(listing, rows, documents, imports),
       };
     },
   };

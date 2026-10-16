@@ -4,7 +4,7 @@ import type {
   StateAmendmentRepository,
 } from "../domain/state-amendment.js";
 export function createPrismaStateAmendmentRepository(
-  database: Pick<PrismaClient, "emenda_estadual" | "emenda_estadual_execucao">,
+  database: Pick<PrismaClient, "emenda_estadual" | "emenda_estadual_execucao" | "state_expense_document" | "state_expense_import">,
 ): StateAmendmentRepository {
   function stateExecutionFilter(
     filters: StateFilters,
@@ -110,7 +110,17 @@ export function createPrismaStateAmendmentRepository(
         where: { ano: year, numero_emenda: number },
         orderBy: [{ nome_orgao: "asc" }, { funcao: "asc" }, { id: "asc" }],
       });
-      return { listing, executions };
+      const normalized = /^\s*(\d+)(?:\s*\/\s*(\d{4}))?\s*$/.exec(number);
+      const amendmentNumber = normalized && (!normalized[2] || Number(normalized[2]) === year)
+        ? String(Number(normalized[1])) : "invalid";
+      const [documents, imports] = await Promise.all([
+        database.state_expense_document.findMany({
+          where: { year, amendment_number: amendmentNumber },
+          orderBy: [{ month: "asc" }, { kind: "asc" }, { id: "asc" }],
+        }),
+        database.state_expense_import.findMany({ where: { year }, orderBy: [{ month: "asc" }, { kind: "asc" }] }),
+      ]);
+      return { listing, executions, documents, imports };
     },
   };
 }

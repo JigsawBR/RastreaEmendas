@@ -1,5 +1,5 @@
 import unittest
-from etl.years import parse_years
+from etl.shared.years import parse_years
 
 
 class YearSelectionTests(unittest.TestCase):

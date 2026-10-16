@@ -1,17 +1,17 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link, useSearchParams } from "react-router-dom";
-import { getAmendmentSource, isStateSummary } from "../lib/amendment-source";
-import SourceSelector from "../components/SourceSelector";
-import { readSource, sourceLabel } from "../lib/sources";
-import { formatBRLCompact, formatInt } from "../lib/format";
+import { getAmendmentSource, isStateSummary } from "../shared/lib/amendment-source";
+import SourceSelector from "../shared/components/SourceSelector";
+import { readSource, sourceLabel } from "../shared/lib/sources";
+import { formatBRLCompact, formatInt } from "../shared/lib/format";
 import {
   Badge,
   Metric,
   PageHeading,
   QueryState,
-} from "../components/DesignSystem";
-import DestinoDoDinheiro from "../components/DestinoDoDinheiro";
-import ExecutionComparison from "../components/ExecutionComparison";
+} from "../shared/components/DesignSystem";
+import DestinoDoDinheiro from "../features/federal-amendments/components/FundingDestinations";
+import ExecutionComparison from "../shared/components/ExecutionComparison";
 export default function Home() {
   const [search, setSearch] = useSearchParams();
   const year = [2023, 2024, 2025, 2026].includes(Number(search.get("ano")))

@@ -1,6 +1,6 @@
 # RastreaEmendas — interface React
 
-Implementação das quatro telas de referência em `telasFigma/`: visão geral, consulta, detalhe da emenda e fontes/importação. Os valores vêm da API REST; os exemplos dos PDFs não foram incorporados à base.
+Implementação das quatro telas de referência em [`docs/design/`](../docs/design/): visão geral, consulta, detalhe da emenda e fontes/importação. Os valores vêm da API REST; os exemplos dos PDFs não foram incorporados à base.
 
 ## Executar
 

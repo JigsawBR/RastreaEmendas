@@ -46,7 +46,24 @@ try {
       const result = await response.json();
       assert.equal(result.ano, year);
       assert.equal(result.numeroEmenda, listing.numero_emenda);
-      assert.equal(result.rastreabilidade.avaliavel, false);
+      assert.ok(Array.isArray(result.documentos));
+      assert.ok(Array.isArray(result.trajeto));
+      assert.equal(result.trajeto.find(step => step.codigo === "requester").evidencias.length, 0);
+    }
+    const imported = await prisma.state_expense_document.findFirst({ where: { kind: "commitment" } });
+    if (imported) {
+      const listings = await prisma.emenda_estadual.findMany({ where: { ano: imported.year } });
+      const original = listings.find(row => String(Number(row.numero_emenda.split("/")[0])) === imported.amendment_number);
+      assert.ok(original);
+      const response = await fetch(base + "/estaduais/emendas/" + imported.year + "/" + encodeURIComponent(original.numero_emenda));
+      assert.equal(response.status, 200);
+      const detail = await response.json();
+      assert.ok(detail.documentos.some(document => document.id === imported.id));
+      assert.equal(detail.rastreabilidade.avaliavel, true);
+      assert.equal(detail.trajeto.find(step => step.codigo === "delivery").evidencias.length, 0);
+      console.log(JSON.stringify({ emendaVerificada: original.numero_emenda,
+        documentos: detail.documentos.length, coberturaCompleta: detail.coberturaDocumental.completa,
+        criteriosDocumentados: detail.rastreabilidade.score }));
     }
     console.log(
       JSON.stringify({

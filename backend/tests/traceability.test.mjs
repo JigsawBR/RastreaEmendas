@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { calculateTraceability } from "../dist/modules/traceability/domain/calculate-traceability.js";
+import { calculateTraceability } from "../dist/modules/federal-amendments/traceability/domain/calculate-traceability.js";
 
 test("calcula rastreabilidade completa com os cinco critérios do RF-08", () => {
   const result = calculateTraceability(
