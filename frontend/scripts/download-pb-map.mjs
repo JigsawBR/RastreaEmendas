@@ -30,5 +30,8 @@ geometry.source = { name: "IBGE · API de Malhas v3, qualidade mínima", geometr
 await mkdir(new URL("frontend/public/maps/", root), { recursive: true });
 await mkdir(new URL("backend/src/shared/territory/", root), { recursive: true });
 await writeFile(new URL("frontend/public/maps/paraiba.geojson", root), JSON.stringify(geometry));
-await writeFile(new URL("backend/src/shared/territory/municipality-catalog.ts", root), `// Generated from IBGE by frontend/scripts/download-pb-map.mjs.\nexport const pbMunicipalities: readonly (readonly [string, string])[] = ${JSON.stringify([...names].sort())};\n`);
+const catalog = JSON.stringify([...names].sort());
+await writeFile(new URL("backend/src/shared/territory/municipality-catalog.ts", root), `// Generated from IBGE by frontend/scripts/download-pb-map.mjs.\nexport const pbMunicipalities: readonly (readonly [string, string])[] = ${catalog};\n`);
+// The ETL resolves municipality names against the same catalog as the API.
+await writeFile(new URL("etl/shared/pb_municipalities.json", root), catalog);
 console.log(`Malha IBGE salva: ${geometry.features.length} municípios / ${JSON.stringify(geometry).length} caracteres`);

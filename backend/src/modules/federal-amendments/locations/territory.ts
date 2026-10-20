@@ -1,6 +1,7 @@
 import { pbMunicipalities } from "../../../shared/territory/municipality-catalog.js";
+import { municipalityKey } from "../../../shared/territory/municipalities.js";
 
-export const municipalityKey = (name: string) => name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().trim().replace(/\s+/g, " ").replace(/ - PB$/, "");
+export { municipalityKey };
 const names = new Map(pbMunicipalities.map(([code, name]) => [municipalityKey(name), code]));
 const officialNames = new Map(pbMunicipalities);
 const positive = (value: unknown) => Number(value ?? 0) > 0;
@@ -9,8 +10,9 @@ type Plan = { nome_beneficiario: string | null; valor_custeio: unknown; valor_in
 type Expense = { municipio: string | null; valor_empenhado: unknown; valor_pago: unknown };
 type StateListing = { ano: number; numero_emenda: string };
 type StateRecord = { year: number; amendment_number: string; payload: unknown };
+type StateDestination = { year: number; amendment_number: string; destination: string; creditor_municipality_ibge: string | null };
 
-export function buildMunicipalityMap(allocations: Allocation[], plans: Plan[], expenses: Expense[], listings: StateListing[], notes: StateRecord[], agreements: StateRecord[]) {
+export function buildMunicipalityMap(allocations: Allocation[], plans: Plan[], expenses: Expense[], listings: StateListing[], destinations: StateDestination[], agreements: StateRecord[]) {
   const rows = new Map(pbMunicipalities.map(([code, name]) => [code, { codigoIbge: code, municipio: name,
     federal: { comRecursos: false, emendas: new Set<string>(), empenhado: 0, pago: 0, planos: 0, valorPlanos: 0, despesaEmpenhado: 0, despesaPago: 0 },
     estadual: new Map<string, { ano: number; numero: string; fontes: Set<string> }>(),
@@ -42,22 +44,27 @@ export function buildMunicipalityMap(allocations: Allocation[], plans: Plan[], e
   const normalized = (number: string) => String(Number(number.split("/")[0]));
   const known = new Map(listings.map(listing => [`${listing.ano}:${normalized(listing.numero_emenda)}`, listing]));
   const linkedState = new Set<string>();
-  for (const [records, basis] of [[notes, "Município informado na nota de empenho"], [agreements, "Município do convenente no instrumento"]] as const) {
-    for (const record of records) {
-      const listing = known.get(`${record.year}:${record.amendment_number}`);
-      if (!listing) continue;
-      const payload = (record.payload ?? {}) as Record<string, unknown>;
-      if (basis.startsWith("Município informado") && (!positive(payload.valorCalculado) || /anula|estorno/i.test(String(payload.descricaoTipo ?? "")))) continue;
-      const location = String(payload.nomeMunicipio ?? payload.municipio ?? "");
-      const code = names.get(municipalityKey(location));
-      const row = code ? rows.get(code) : undefined;
-      if (!row) continue;
-      const key = `${listing.ano}:${listing.numero_emenda}`;
-      linkedState.add(key);
-      const item = row.estadual.get(key) ?? { ano: listing.ano, numero: listing.numero_emenda, fontes: new Set<string>() };
-      item.fontes.add(basis);
-      row.estadual.set(key, item);
-    }
+  const linkState = (year: number, amendment: string, code: string | null | undefined, basis: string) => {
+    const listing = known.get(`${year}:${amendment}`);
+    const row = listing && code ? rows.get(code) : undefined;
+    if (!listing || !row) return;
+    const key = `${listing.ano}:${listing.numero_emenda}`;
+    linkedState.add(key);
+    const item = row.estadual.get(key) ?? { ano: listing.ano, numero: listing.numero_emenda, fontes: new Set<string>() };
+    item.fontes.add(basis);
+    row.estadual.set(key, item);
+  };
+  // Only a municipal transfer names the beneficiary city; a private entity's
+  // address is its seat, not where the money is applied.
+  for (const record of destinations)
+    if (record.destination === "municipal_transfer")
+      linkState(record.year, record.amendment_number, record.creditor_municipality_ibge, "Transferência ao município na nota de empenho");
+  // Same rule for agreements: the convenente's municipality is the beneficiary
+  // only when the convenente is the municipality itself, never an NGO's seat.
+  for (const record of agreements) {
+    const payload = (record.payload ?? {}) as Record<string, unknown>;
+    if (!/^(PREF|MUNIC[IÍ]PIO D|FUNDO MUNICIPAL)/i.test(String(payload.nome ?? "").trim())) continue;
+    linkState(record.year, record.amendment_number, names.get(municipalityKey(String(payload.municipio ?? ""))), "Município convenente no instrumento");
   }
   for (const listing of listings) if (!linkedState.has(`${listing.ano}:${listing.numero_emenda}`)) nonMunicipalState++;
   return {

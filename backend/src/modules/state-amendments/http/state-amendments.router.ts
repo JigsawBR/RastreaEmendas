@@ -3,6 +3,7 @@ import type { Request } from "express";
 import type { StateAmendmentService } from "../application/state-amendment-service.js";
 import type { StateFilters } from "../domain/state-amendment.js";
 import { stateAmendmentsCsv } from "../infrastructure/state-amendment-csv.js";
+import { findMunicipalityCode } from "../../../shared/territory/municipalities.js";
 const SOURCE = {
   origem: "estadual",
   fonte: "CODATA — Dados Abertos da Paraíba",
@@ -15,19 +16,20 @@ function filters(req: Request): StateFilters {
     beneficiario: req.query.beneficiario as string | undefined,
     funcao: req.query.funcao as string | undefined,
     orgao: req.query.orgao as string | undefined,
+    municipio: req.query.municipio
+      ? findMunicipalityCode(req.query.municipio as string)
+      : undefined,
   };
 }
 export function createStateAmendmentsRouter(service: StateAmendmentService) {
   const router = Router();
+  // The state filter matches only municipal transfers, so it needs an exact
+  // municipality (name or IBGE code), not a substring of free text.
   router.use((req, res, next) => {
-    if (req.query.municipio !== undefined)
+    if (req.query.municipio !== undefined && !findMunicipalityCode(req.query.municipio as string))
       return res
         .status(400)
-        .json({
-          error: "filtro_nao_suportado",
-          parametro: "municipio",
-          alternativa: "beneficiario",
-        });
+        .json({ error: "municipio_desconhecido", parametro: "municipio" });
     next();
   });
   router.get("/emendas", async (req, res) => {

@@ -162,6 +162,12 @@ export default function StateAmendmentDetail() {
       <section className="panel">
         <h2>Destinação da emenda</h2>
         <p>
+          <strong>Município beneficiado:</strong>{" "}
+          {e.municipiosBeneficiados.length
+            ? e.municipiosBeneficiados.join(", ")
+            : "Não identificado"}
+        </p>
+        <p>
           <strong>Beneficiário:</strong>{" "}
           {e.beneficiarioFinal ?? "Não informado"}
         </p>
@@ -176,6 +182,68 @@ export default function StateAmendmentDetail() {
           {e.dataEnvio ? formatDate(e.dataEnvio) : "Data não informada"}. O
           beneficiário não é automaticamente identificado como município.
         </p>
+        {e.destinos.length > 0 && (
+          <div className="documents">
+            <h3>Para quem o empenho foi feito</h3>
+            <div className="table-scroll">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Credor</th>
+                    <th>Modalidade de aplicação</th>
+                    <th>Município</th>
+                    <th>Empenho líquido</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {e.destinos.map((d, i) => (
+                    <tr key={i}>
+                      <td>
+                        {d.credor ?? "Não informado"}
+                        <small>{d.documentoCredor ?? ""}</small>
+                      </td>
+                      <td>
+                        {d.destinoRotulo}
+                        <small>
+                          {d.modalidadeAplicacao
+                            ? "Modalidade " + d.modalidadeAplicacao
+                            : ""}
+                        </small>
+                      </td>
+                      <td>
+                        {d.municipioBeneficiado ? (
+                          <>
+                            {d.municipioBeneficiado}
+                            <small>Município beneficiado</small>
+                          </>
+                        ) : d.municipioCredor ? (
+                          <>
+                            {d.municipioCredor}
+                            <small>Sede do credor, não município beneficiado</small>
+                          </>
+                        ) : (
+                          "Não informado"
+                        )}
+                      </td>
+                      <td>
+                        {formatBRL(d.valorEmpenhadoLiquido)}
+                        <small>
+                          {d.notas} {d.notas === 1 ? "nota" : "notas"}
+                        </small>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p className="muted small">
+              A modalidade de aplicação da nota de empenho indica quem recebe o
+              recurso. Só a transferência ao município identifica a cidade
+              beneficiada; para entidades privadas, o município registrado é a
+              sede. Valores somam principal, reforços e anulações.
+            </p>
+          </div>
+        )}
       </section>
       <section className="panel">
         <h2>Execução informada pela CODATA</h2>

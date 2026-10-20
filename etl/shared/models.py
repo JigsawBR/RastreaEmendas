@@ -80,6 +80,28 @@ class StateExpenseImport(Base):
     collected_at: Mapped[datetime] = mapped_column(DateTime)
 
 
+class StateAmendmentDestination(Base):
+    """Where a state amendment's commitment goes: amendment x creditor x modality.
+
+    Derived from the commitment notes of the same snapshot (etl.state.destinations).
+    creditor_municipality is the creditor's address; it is the beneficiary
+    municipality only when destination is municipal_transfer.
+    """
+
+    __tablename__ = "state_amendment_destination"
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    year: Mapped[int] = mapped_column(Integer, index=True)
+    amendment_number: Mapped[str] = mapped_column(String(20), index=True)
+    creditor_document: Mapped[str | None] = mapped_column(String(20))
+    creditor_name: Mapped[str | None] = mapped_column(String(200))
+    application_modality: Mapped[str | None] = mapped_column(String(2))
+    destination: Mapped[str] = mapped_column(String(30), index=True)
+    creditor_municipality: Mapped[str | None] = mapped_column(String(120))
+    creditor_municipality_ibge: Mapped[str | None] = mapped_column(String(7), index=True)
+    committed_value: Mapped[Decimal] = mapped_column(Numeric(15, 2))
+    note_count: Mapped[int] = mapped_column(Integer)
+
+
 class Emenda(Base):
     __tablename__ = "emenda"
 

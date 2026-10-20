@@ -197,6 +197,7 @@ try {
   assert.ok(!stateHome.includes("Explorar o destino dos pagamentos"));
   const stateItem = {
     ...item,
+    localidades: [],
     beneficiarioFinal: "Hospital de teste",
     secretaria: "Saúde",
     objeto: "Objeto",
@@ -228,8 +229,9 @@ try {
       c.setQueryData(["resumo", "estadual", 2024], stateSummary);
     },
   );
-  assert.match(stateList, /BENEFICIÁRIO/);
-  assert.match(stateList, /Hospital de teste/);
+  assert.match(stateList, /DESTINO/);
+  assert.match(stateList, /Município beneficiado/);
+  assert.match(stateList, /Hospital de teste/, "sem transferência a município, mostra o beneficiário");
   assert.match(stateList, /Não informado/);
   assert.ok(stateList.includes("/emendas-estaduais/2024/001"));
   assert.ok(stateList.includes("/api/estaduais/export/emendas"));
@@ -250,6 +252,15 @@ try {
         execucoes: [],
         porFuncao: [],
         porOrgao: [],
+        municipiosBeneficiados: ["Cajazeiras"],
+        destinos: [
+          { credor: "PREFEITURA MUNICIPAL DE CAJAZEIRAS", documentoCredor: "1", modalidadeAplicacao: "40",
+            destino: "municipal_transfer", destinoRotulo: "Transferência ao município", municipioCredor: "Cajazeiras",
+            municipioBeneficiado: "Cajazeiras", codigoIbge: "2503704", valorEmpenhadoLiquido: 100, notas: 1 },
+          { credor: "ASSOCIAÇÃO", documentoCredor: "2", modalidadeAplicacao: "50",
+            destino: "private_nonprofit", destinoRotulo: "Entidade privada sem fins lucrativos", municipioCredor: "João Pessoa",
+            municipioBeneficiado: null, codigoIbge: null, valorEmpenhadoLiquido: 50, notas: 2 },
+        ],
         rastreabilidade: {
           avaliavel: false,
           score: null,
@@ -261,6 +272,8 @@ try {
   assert.match(stateDetail, /Execução agregada sem documentos/);
   assert.match(stateDetail, /Não calculável/);
   assert.ok(stateDetail.includes("beneficiario=Hospital&amp;pagina=2"));
+  assert.match(stateDetail, /Município beneficiado:<\/strong> Cajazeiras/);
+  assert.match(stateDetail, /Sede do credor, não município beneficiado/);
   const stateCoverage = await render(
     "/src/pages/DataSources.tsx",
     "/sobre-os-dados?origem=estadual",

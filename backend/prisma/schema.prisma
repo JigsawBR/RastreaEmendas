@@ -61,6 +61,25 @@ model state_expense_import {
   @@index([year])
 }
 
+model state_amendment_destination {
+  id                         Int     @id @default(autoincrement())
+  year                       Int
+  amendment_number           String  @db.VarChar(20)
+  creditor_document          String? @db.VarChar(20)
+  creditor_name              String? @db.VarChar(200)
+  application_modality       String? @db.VarChar(2)
+  destination                String  @db.VarChar(30)
+  creditor_municipality      String? @db.VarChar(120)
+  creditor_municipality_ibge String? @db.VarChar(7)
+  committed_value            Decimal @db.Decimal(15, 2)
+  note_count                 Int
+
+  @@index([year])
+  @@index([amendment_number])
+  @@index([destination])
+  @@index([creditor_municipality_ibge])
+}
+
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")

@@ -13,10 +13,12 @@ test("mapa cobre 223 municípios e mantém valores federais e vínculos estaduai
   ], [{ nome_beneficiario: "MUNICIPIO DE JOAO PESSOA", valor_custeio: 1000, valor_investimento: 0 }],
   [{ municipio: "CAMPINA GRANDE", valor_empenhado: 40, valor_pago: 10 }],
   [{ ano: 2024, numero_emenda: "0576/2024" }, { ano: 2024, numero_emenda: "0799" }],
-  [{ year: 2024, amendment_number: "576", payload: { nomeMunicipio: "CAJAZEIRAS", valorCalculado: 100 } },
-   { year: 2024, amendment_number: "576", payload: { nomeMunicipio: "SOUSA", valorCalculado: -100, descricaoTipo: "ANULAÇÃO" } },
-   { year: 2023, amendment_number: "576", payload: { nomeMunicipio: "SOUSA", valorCalculado: 100 } }],
-  [{ year: 2024, amendment_number: "576", payload: { municipio: "Cajazeiras", valorInstrumento: 999999 } }]);
+  [{ year: 2024, amendment_number: "576", destination: "municipal_transfer", creditor_municipality_ibge: "2503704" },
+   { year: 2024, amendment_number: "799", destination: "private_nonprofit", creditor_municipality_ibge: "2507507" },
+   { year: 2024, amendment_number: "799", destination: "municipal_transfer", creditor_municipality_ibge: null },
+   { year: 2023, amendment_number: "576", destination: "municipal_transfer", creditor_municipality_ibge: "2516201" }],
+  [{ year: 2024, amendment_number: "576", payload: { nome: "MUNICIPIO DE CAJAZEIRAS", municipio: "Cajazeiras", valorInstrumento: 999999 } },
+   { year: 2024, amendment_number: "799", payload: { nome: "ASSOCIACAO BENEFICENTE", municipio: "João Pessoa", valorInstrumento: 80000 } }]);
   assert.equal(result.items.length, 223);
   const cajazeiras = result.items.find(r => r.municipio === "Cajazeiras");
   assert.equal(cajazeiras.federal.emendas, 1);
@@ -26,6 +28,7 @@ test("mapa cobre 223 municípios e mantém valores federais e vínculos estaduai
   assert.equal(cajazeiras.estadual.emendas[0].numero, "0576/2024");
   assert.equal(cajazeiras.estadual.emendas[0].fontes.length, 2);
   assert.equal(result.items.find(r => r.municipio === "Sousa").estadual.quantidade, 0);
+  assert.equal(result.items.find(r => r.municipio === "João Pessoa").estadual.quantidade, 0, "sede de entidade não é município beneficiado");
   assert.equal(result.items.find(r => r.municipio === "Sousa").federal.comRecursos, false);
   assert.equal(result.items.find(r => r.municipio === "João Pessoa").federal.valorPlanos, 1000);
   assert.equal(result.items.find(r => r.municipio === "Campina Grande").federal.despesaPago, 10);
@@ -40,7 +43,7 @@ test("API do mapa exclui candidatos/contratos e filtra o exercício em cada font
   stub(prisma.transferegov_plano_acao, async ({ where }) => { assert.equal(where.ano_emenda, 2024); return []; });
   stub(prisma.despesa_mensal, async ({ where }) => { assert.equal(where.ano_mes.startsWith, "2024"); return []; });
   stub(prisma.emenda_estadual, async ({ where }) => { assert.equal(where.ano, 2024); return []; });
-  stub(prisma.state_expense_document, async ({ where }) => { assert.deepEqual(where, { year: 2024, kind: "commitment", link_status: "confirmed" }); return []; });
+  stub(prisma.state_amendment_destination, async ({ where }) => { assert.deepEqual(where, { year: 2024, destination: "municipal_transfer" }); return []; });
   stub(prisma.amendment_evidence, async ({ where }) => { assert.deepEqual(where, { origin: "state", year: 2024, source: "pb_agreements", kind: "agreement", status: "confirmed" }); return []; });
   stub(prisma.evidence_import, async () => []);
   const server = buildApp().listen(0, "127.0.0.1");

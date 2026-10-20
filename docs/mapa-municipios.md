@@ -12,8 +12,13 @@ nenhuma consulta externa a mapas é necessária para visualizar a tela.
 - Federal: valor positivo nas alocações CGU, na execução mensal ou nos planos
   especiais. As três fontes permanecem separadas. Pagamento pode comprovar
   apenas o repasse, e valor de plano representa previsão.
-- Estadual: município explicitamente informado em empenho confirmado e
-  positivo, ou no convenente de convênio/termo com vínculo confirmado à emenda.
+- Estadual: empenho líquido positivo **transferido ao município** (modalidade
+  de aplicação 40–42, ver `docs/consulta-estadual.md`), ou convênio confirmado
+  em que o próprio município é o convenente. A sede de entidades privadas,
+  credoras ou convenentes, não municipaliza o recurso: antes desta regra,
+  João Pessoa recebia 72 emendas estaduais de 2024 no mapa, das quais só 15 eram
+  transferências à prefeitura. Os 359 convênios confirmados são todos termos de
+  fomento com OSCs e hoje não geram destaque.
   Somente emendas presentes na listagem estadual são incluídas. Uma emenda pode
   ter vínculos com mais de uma cidade; as contagens municipais não devem ser
   somadas como quantidade de emendas únicas.

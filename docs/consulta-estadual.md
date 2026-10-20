@@ -16,11 +16,34 @@ Os JSONs preservam os campos e valores dos registros retornados pela fonte. A da
 ## API
 
 - `GET /estaduais/resumo?ano=2024`: indicadores da origem estadual.
-- `GET /estaduais/emendas?ano=2024&parlamentar=&beneficiario=&funcao=&orgao=&limit=20&offset=0`: consulta paginada.
-- `GET /estaduais/emendas/2024/001`: identidade, destinação, execução por função/órgão e linhas de classificação.
-- `GET /estaduais/export/emendas`: CSV de toda a consulta filtrada, sem o limite de paginação.
+- `GET /estaduais/emendas?ano=2024&parlamentar=&beneficiario=&funcao=&orgao=&municipio=&limit=20&offset=0`: consulta paginada. `localidades` traz os municípios beneficiados.
+- `GET /estaduais/emendas/2024/001`: identidade, destinação, execução por função/órgão, linhas de classificação, `municipiosBeneficiados` e `destinos`.
+- `GET /estaduais/export/emendas`: CSV de toda a consulta filtrada, sem o limite de paginação, com a coluna `municipios_beneficiados`.
+- `GET /estaduais/resumo`: inclui `destinos.porDestino` e `destinos.emendasComMunicipioBeneficiado`.
 
-Sem `ano`, listagem, resumo e exportação abrangem todos os exercícios carregados. `limit` é limitado a 200. Valores de texto usam busca sem distinção de maiúsculas; órgão aceita nome ou código exato. Função e órgão devem corresponder à mesma linha de execução. O filtro `municipio` é rejeitado na API estadual: o esquema atual tem beneficiário, sem município estruturado.
+Sem `ano`, listagem, resumo e exportação abrangem todos os exercícios carregados. `limit` é limitado a 200. Valores de texto usam busca sem distinção de maiúsculas; órgão aceita nome ou código exato. Função e órgão devem corresponder à mesma linha de execução. O filtro `municipio` aceita o nome oficial (sem distinção de acentos e caixa) ou o código IBGE e seleciona apenas emendas **transferidas** àquele município; um nome que não está no catálogo IBGE devolve 400 `municipio_desconhecido`.
+
+## Município beneficiado
+
+A nota de empenho estadual informa a **modalidade de aplicação** (dígitos 3–4 de `codigoNatureza`), que diz quem recebe o recurso. O ETL documental grava em `state_amendment_destination` uma linha por emenda × credor × modalidade com empenho líquido positivo (`valorCalculado` somado com sinal, ou seja, anulações descontadas; credor totalmente anulado não é destino). Ver `etl/state/destinations.py`.
+
+| Modalidade | `destination` | Município |
+|---|---|---|
+| 40–42 Transferências a municípios | `municipal_transfer` | O credor é a prefeitura ou um fundo municipal: o município da nota **é** o município beneficiado. |
+| 50 / 60 Entidades privadas | `private_nonprofit` / `private_for_profit` | Apenas a **sede** do credor (`creditor_municipality`). Nunca é tratada como município beneficiado: a maioria das OSCs tem sede em João Pessoa e atende em outras cidades. |
+| 90 / 91 Aplicação direta | `direct_execution` | Sem município: o Estado executa o gasto. |
+
+O nome em `nomeMunicipio` é ligado ao catálogo IBGE (`etl/shared/pb_municipalities.json`, gerado com o catálogo da API por `frontend/scripts/download-pb-map.mjs`) por igualdade sem acentos. Seis nomes antigos ou com grafia diferente foram confirmados pelo credor das transferências e estão em `ALIASES`: PEDRO REGIO (Pedro Régis), SANTAREM (Joca Claudino), SERIDO (São Vicente do Seridó), SAO DOMINGOS DE POMBAL (São Domingos), SAO BENTO DE POMBAL (São Bentinho) e ASSIS CHATEAUBRIAND (Riachão do Bacamarte). Na carga de 19/10/2026, todas as transferências municipais de 2023–2026 foram resolvidas.
+
+Medido nas cargas completas (empenho líquido):
+
+| Exercício | Transferência ao município | Entidade privada | Aplicação direta |
+|---|---|---|---|
+| 2023 | 263 emendas · R$ 64,0 mi (68,3%) | 145 · R$ 22,8 mi (24,3%) | 34 · R$ 6,9 mi (7,4%) |
+| 2024 | 390 · R$ 83,0 mi (70,2%) | 224 · R$ 31,3 mi (26,5%) | 43 · R$ 4,0 mi (3,4%) |
+| 2025 | 414 · R$ 111,6 mi (70,8%) | 250 · R$ 40,4 mi (25,6%) | 52 · R$ 5,6 mi (3,6%) |
+
+Uma emenda dividida entre destinos conta em cada um. Para as entidades privadas, o município atendido só pode vir de outra fonte (objeto da emenda, plano de trabalho do convênio); a API não infere município a partir do texto do objeto.
 
 ## Identidade e valores
 
@@ -43,7 +66,7 @@ Visão geral e consulta têm o seletor **Origem da emenda**, com Federal (CGU) e
 
 O detalhe estadual apresenta o **caminho do recurso público**: fonte orçamentária, autoria, solicitante original, destino, órgão executor, credor, desembolso e entrega. Cada etapa mostra evidências e lacunas. A fonte orçamentária não prova toda a origem da arrecadação; o autor parlamentar não é automaticamente o solicitante; o credor não é automaticamente o beneficiário; o pagamento não comprova entrega física. Solicitante e entrega permanecem sem evidência enquanto não houver uma fonte documental integrada que os comprove.
 
-O RF-08 documental usa cinco critérios com peso de 20 pontos: documento de empenho, documento de liquidação, documento de pagamento, função e órgão identificados. Uma fase exige movimento positivo com vínculo confirmado, sem anulação integral daquele registro. O indicador mede presença de evidências, não saldo líquido, regularidade ou entrega. Com documentos ainda não importados, o score permanece `null`. Com coleta parcial, a interface identifica os meses consultados. Uma fase não localizada não prova ausência de execução. A visão territorial de municípios continua usando as fontes federais; beneficiários estaduais não são transformados em municípios por comparação textual.
+O RF-08 documental usa cinco critérios com peso de 20 pontos: documento de empenho, documento de liquidação, documento de pagamento, função e órgão identificados. Uma fase exige movimento positivo com vínculo confirmado, sem anulação integral daquele registro. O indicador mede presença de evidências, não saldo líquido, regularidade ou entrega. Com documentos ainda não importados, o score permanece `null`. Com coleta parcial, a interface identifica os meses consultados. Uma fase não localizada não prova ausência de execução. A etapa "Para onde foi destinado" da trilha cita as transferências a municípios; beneficiários estaduais não são transformados em municípios por comparação textual.
 
 ## Coleta documental estadual
 

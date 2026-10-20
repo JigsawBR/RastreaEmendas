@@ -69,6 +69,7 @@ function matches(row, where = {}) {
           String(row[key]).toLowerCase().includes(value.contains.toLowerCase())
         );
       if ("equals" in value) return row[key] === value.equals;
+      if ("in" in value) return value.in.includes(row[key]);
     }
     return row[key] === value;
   });
@@ -126,6 +127,15 @@ test("API estadual filtra, pagina, exporta e distingue a identidade por exercíc
     }),
     execution(2024, "099", 900, 900, 900, { id: 4 }),
   ];
+  const destination = (number, kind, ibge, value, extra = {}) => ({
+    year: 2024, amendment_number: number, creditor_document: "1", creditor_name: "Credor",
+    application_modality: kind === "municipal_transfer" ? "40" : "50", destination: kind,
+    creditor_municipality: null, creditor_municipality_ibge: ibge, committed_value: value, note_count: 1, ...extra,
+  });
+  const destinations = [
+    destination("2", "municipal_transfer", "2503704", 100, { creditor_name: "PREFEITURA MUNICIPAL DE CAJAZEIRAS" }),
+    destination("2", "private_nonprofit", "2507507", 50),
+  ];
   const originals = [];
   function stub(model, method, fn) {
     originals.push([model, method, model[method]]);
@@ -133,12 +143,21 @@ test("API estadual filtra, pagina, exporta e distingue a identidade por exercíc
   }
   stub(prisma.state_expense_document, "findMany", async () => []);
   stub(prisma.state_expense_import, "findMany", async () => []);
+  stub(prisma.state_amendment_destination, "findMany", async ({ where, select }) =>
+    destinations
+      .filter((r) => matches(r, where))
+      .map((row) =>
+        select
+          ? Object.fromEntries(Object.keys(select).map((key) => [key, row[key]]))
+          : row,
+      ),
+  );
   stub(
     prisma.emenda_estadual,
     "count",
     async ({ where }) => listings.filter((r) => matches(r, where)).length,
   );
-  stub(prisma.emenda_estadual, "findMany", async ({ where, take, skip = 0 }) =>
+  stub(prisma.emenda_estadual, "findMany", async ({ where = {}, take, skip = 0 }) =>
     listings
       .filter((r) => matches(r, where))
       .sort(
@@ -218,6 +237,36 @@ test("API estadual filtra, pagina, exporta e distingue a identidade por exercíc
       800,
       "valor destinado usa listagem sem multiplicar por linhas de execução",
     );
+    for (const municipio of ["Cajazeiras", "2503704", "cajazeiras"]) {
+      const located = await json("/estaduais/emendas?municipio=" + municipio);
+      assert.equal(located.total, 1, municipio);
+      assert.equal(located.items[0].numeroEmenda, "002");
+      assert.deepEqual(located.items[0].localidades, ["Cajazeiras"]);
+    }
+    assert.equal(
+      (await json("/estaduais/emendas?municipio=Jo%C3%A3o%20Pessoa")).total,
+      0,
+      "sede de entidade privada não é município beneficiado",
+    );
+    assert.equal((await json("/estaduais/emendas?ano=2025&municipio=Cajazeiras")).total, 0);
+    assert.equal(
+      (await json("/estaduais/emendas?municipio=Cajazeiras&funcao=Educa%C3%A7%C3%A3o")).total,
+      1,
+      "município e função combinam por AND",
+    );
+    const detail = await json("/estaduais/emendas/2024/002");
+    assert.deepEqual(detail.municipiosBeneficiados, ["Cajazeiras"]);
+    assert.equal(detail.destinos.length, 2);
+    assert.equal(detail.destinos.find((d) => d.destino === "private_nonprofit").municipioBeneficiado, null);
+    assert.equal(detail.destinos.find((d) => d.destino === "private_nonprofit").municipioCredor, "João Pessoa");
+    const step = detail.trajeto.find((s) => s.codigo === "destination");
+    assert.ok(step.evidencias.some((e) => e.includes("Cajazeiras")));
+    assert.match(step.lacuna, /sede/);
+    assert.deepEqual(summary.destinos.emendasComMunicipioBeneficiado, 1);
+    assert.deepEqual(
+      summary.destinos.porDestino.map((d) => [d.destino, d.emendas, d.valorEmpenhadoLiquido]),
+      [["municipal_transfer", 1, 100], ["private_nonprofit", 1, 50]],
+    );
     const empty = await json("/estaduais/resumo?ano=2026");
     assert.equal(empty.totalEmendas, 0);
     assert.equal(empty.valorPago, null);
@@ -228,6 +277,7 @@ test("API estadual filtra, pagina, exporta e distingue a identidade por exercíc
     const text = await csv.text();
     assert.equal(text.trim().split("\n").length, 2);
     assert.ok(text.includes('"estadual";"CODATA";"2024";"002"'));
+    assert.ok(text.includes('"Hospital";"Cajazeiras"'), "CSV inclui municípios beneficiados");
     assert.ok(
       text.includes(';"100";;"30";'),
       "CSV preserva valores ausentes vazios",
@@ -237,7 +287,8 @@ test("API estadual filtra, pagina, exporta e distingue a identidade por exercíc
       "offset=-1",
       "limit=0",
       "beneficiario=a&beneficiario=b",
-      "municipio=Cajazeiras",
+      "municipio=Inexistente",
+      "municipio=",
     ])
       assert.equal(
         (await get("/estaduais/emendas?" + query)).status,

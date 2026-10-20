@@ -1,3 +1,5 @@
+import type { StateDestination } from "./state-destination.js";
+
 export type Amount = { toString(): string } | number | null;
 export type StateFilters = {
   ano?: number;
@@ -5,6 +7,8 @@ export type StateFilters = {
   beneficiario?: string;
   funcao?: string;
   orgao?: string;
+  /** IBGE code of the beneficiary municipality (municipal transfers only). */
+  municipio?: string;
 };
 export type Pagination = { limit: number; offset: number };
 export type StateListing = {
@@ -62,13 +66,14 @@ export interface StateAmendmentRepository {
     total: number;
     listings: StateListing[];
     executions: StateExecution[];
+    destinations?: StateDestination[];
   }>;
   summary(
     year?: number,
-  ): Promise<{ listings: StateListing[]; executions: StateExecution[] }>;
+  ): Promise<{ listings: StateListing[]; executions: StateExecution[]; destinations?: StateDestination[] }>;
   find(
     year: number,
     number: string,
   ): Promise<{ listing: StateListing; executions: StateExecution[];
-    documents?: StateDocument[]; imports?: StateImport[] } | null>;
+    documents?: StateDocument[]; imports?: StateImport[]; destinations?: StateDestination[] } | null>;
 }

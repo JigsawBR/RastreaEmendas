@@ -8,7 +8,7 @@ from sqlalchemy import create_engine, select, func
 
 from etl.state import documents as pipeline
 from etl.state.documents import link_documents, normalize_amendment
-from etl.shared.models import StateExpenseDocument, StateExpenseImport
+from etl.shared.models import StateAmendmentDestination, StateExpenseDocument, StateExpenseImport
 
 
 def note(number="0799", **extra):
@@ -39,10 +39,11 @@ class StateDocumentTests(unittest.TestCase):
 
     def test_load_is_idempotent_and_failed_collection_preserves_database(self):
         engine = create_engine("sqlite://")
-        for model in [StateExpenseDocument, StateExpenseImport]:
+        for model in [StateExpenseDocument, StateExpenseImport, StateAmendmentDestination]:
             model.__table__.create(engine)
         def fetched(kind, *args, **kwargs):
-            return ([note()] if kind == "commitment" else []), datetime(2026, 10, 15)
+            commitment = note(valorCalculado=500, codigoNatureza="33404100", nomeMunicipio="ARACAGI")
+            return ([commitment] if kind == "commitment" else []), datetime(2026, 10, 15)
         with patch.object(pipeline, "fetch_listagem", return_value=[{"emenda": "0799/2024"}]), \
                 patch.object(pipeline, "fetch_month", side_effect=fetched):
             pipeline.load_documents(engine, 2024, [12])
@@ -54,6 +55,8 @@ class StateDocumentTests(unittest.TestCase):
         with engine.connect() as connection:
             self.assertEqual(connection.scalar(select(func.count()).select_from(StateExpenseDocument)), 1)
             self.assertEqual(connection.scalar(select(func.count()).select_from(StateExpenseImport)), 3)
+            self.assertEqual(connection.scalar(select(StateAmendmentDestination.creditor_municipality_ibge)), "2500809")
+            self.assertEqual(connection.scalar(select(func.count()).select_from(StateAmendmentDestination)), 1)
         engine.dispose()
 
     def test_exact_normalization_rejects_partial_matches_and_other_years(self):

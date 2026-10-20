@@ -26,7 +26,8 @@ export interface AmendmentSourceStrategy {
   id: AmendmentSource;
   label: string;
   destinationLabel: string;
-  fields: readonly { key: FilterKey; label: string; placeholder: string }[];
+  /** `municipalities` offers the official IBGE names, required by the source. */
+  fields: readonly { key: FilterKey; label: string; placeholder: string; suggestions?: "municipalities" }[];
   params(
     filters: SearchFilters,
     pagination: { limit: number; offset: number },
@@ -88,8 +89,14 @@ const strategies: Record<AmendmentSource, AmendmentSourceStrategy> = {
   estadual: {
     id: "estadual",
     label: "Estadual (CODATA)",
-    destinationLabel: "Beneficiário",
+    destinationLabel: "Destino",
     fields: [
+      {
+        key: "municipio",
+        label: "Município beneficiado",
+        placeholder: "Nome oficial do município",
+        suggestions: "municipalities",
+      },
       {
         key: "beneficiario",
         label: "Beneficiário",
@@ -105,6 +112,7 @@ const strategies: Record<AmendmentSource, AmendmentSourceStrategy> = {
     params: (filters, pagination) => ({
       ...commonParams(filters, pagination),
       beneficiario: filters.beneficiario || undefined,
+      municipio: filters.municipio || undefined,
     }),
     list: (params) => stateApi.amendments(params),
     summary: (year) => stateApi.summary(year),
@@ -114,10 +122,12 @@ const strategies: Record<AmendmentSource, AmendmentSourceStrategy> = {
       item.ano +
       "/" +
       encodeURIComponent(item.numeroEmenda ?? ""),
+    // Municipalities come only from transfers to the city itself; otherwise
+    // fall back to the beneficiary named in the listing.
     destination: (item) =>
-      "beneficiarioFinal" in item
-        ? item.beneficiarioFinal || "Não informado"
-        : "Não informado",
+      item.localidades.join(", ") ||
+      ("beneficiarioFinal" in item && item.beneficiarioFinal) ||
+      "Não informado",
   },
 };
 export const amendmentSourceOptions = Object.values(strategies);

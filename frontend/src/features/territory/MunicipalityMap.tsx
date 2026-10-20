@@ -1,27 +1,17 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { municipalityMapData } from "./api";
-import type { MunicipalityMapItem } from "./api";
+import { loadGeography, municipalityMapData } from "./api";
+import type { Geography, MunicipalityMapItem } from "./api";
 import { QueryState } from "../../shared/components/DesignSystem";
 import { formatBRL, formatInt } from "../../shared/lib/format";
 
-type Position = [number, number];
-type Shape = { properties: { code: string; name: string }; geometry: { type: "Polygon"; coordinates: Position[][] } | { type: "MultiPolygon"; coordinates: Position[][][] } };
-type Geography = { type: "FeatureCollection"; features: Shape[] };
 const labels = { federal: "Federais", state: "Estaduais", both: "Federais e estaduais", none: "Sem vínculo identificado" };
 type Category = keyof typeof labels;
 function category(item: MunicipalityMapItem | undefined, origin: string): Category {
   const federal = origin !== "state" && !!item?.federal.comRecursos;
   const state = origin !== "federal" && (item?.estadual.quantidade ?? 0) > 0;
   return federal && state ? "both" : federal ? "federal" : state ? "state" : "none";
-}
-async function loadGeography(): Promise<Geography> {
-  const response = await fetch("/maps/paraiba.geojson");
-  if (!response.ok) throw new Error("Malha indisponível");
-  const data = await response.json();
-  if (data.type !== "FeatureCollection" || data.features?.length !== 223) throw new Error("Malha incompleta");
-  return data;
 }
 function paths(data: Geography) {
   const polygons = data.features.map(feature => ({ feature, polygons: feature.geometry.type === "Polygon" ? [feature.geometry.coordinates] : feature.geometry.coordinates }));
@@ -94,17 +84,18 @@ export default function MunicipalityMap({ year }: { year: number }) {
             <div className="map-origin-card"><h4><i className="map-swatch map-state" aria-hidden="true" /> Emendas estaduais</h4>
               {selected.estadual.quantidade > 0 ? <>
                 <p>{selected.estadual.quantidade} {selected.estadual.quantidade === 1 ? "emenda com vínculo territorial" : "emendas com vínculo territorial"}</p>
-                <p className="muted small">Município informado no empenho ou no convenente. O vínculo não atribui todo o valor da emenda a esta cidade nem comprova pagamento.</p>
+                <p className="muted small">Empenho transferido à prefeitura ou a fundo municipal. O vínculo não atribui todo o valor da emenda a esta cidade nem comprova pagamento.</p>
                 <ul className="map-amendment-links">{selected.estadual.emendas.slice(0, expanded ? undefined : 5).map(item => <li key={`${item.ano}:${item.numero}`}><Link to={`/emendas-estaduais/${item.ano}/${encodeURIComponent(item.numero)}`}>Emenda estadual {item.numero}</Link><small>{item.fontes.join(" · ")}</small></li>)}</ul>
                 {selected.estadual.emendas.length > 5 && <button className="button secondary" onClick={() => setExpanded(!expanded)}>{expanded ? "Mostrar menos" : "Ver todas as emendas vinculadas"}</button>}
-              </> : <p className="muted small">Nenhum vínculo estadual com município explícito identificado na base carregada.</p>}
+                <Link to={`/emendas?origem=estadual&ano=${year}&municipio=${encodeURIComponent(selected.municipio)}`}>Consultar emendas estaduais do município →</Link>
+              </> : <p className="muted small">Nenhuma transferência estadual a este município identificada na base carregada. Recursos a entidades sediadas aqui não são atribuídos à cidade.</p>}
             </div>
           </>}
         </aside>
       </div>
       <p className="notice">Destaque no mapa indica recurso ou destinação identificada, sem certificar pagamento ou entrega. Valores das fontes federais são complementares e não devem ser somados. Cinza indica vínculo não identificado no filtro atual, não ausência de recursos.</p>
       <p className="muted small">Fora da distribuição municipal: {data.data.semMunicipio.alocacoesFederais} alocações federais e {data.data.semMunicipio.emendasEstaduais} emendas estaduais sem município identificado nas fontes utilizadas. Contratos com endereço de fornecedor e vínculos candidatos não municipalizam recursos.</p>
-      {data.data.coberturaEstadual.length === 0 && <p className="notice">Convênios estaduais ainda não carregados para este exercício. O mapa estadual considera apenas os empenhos disponíveis com município explícito.</p>}
+      {data.data.coberturaEstadual.length === 0 && <p className="notice">Convênios estaduais ainda não carregados para este exercício. O mapa estadual considera apenas as transferências a municípios nos empenhos disponíveis.</p>}
     </>}
   </section>;
 }

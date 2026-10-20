@@ -2,10 +2,47 @@ import type { Prisma, PrismaClient } from "@prisma/client";
 import type {
   StateFilters,
   StateAmendmentRepository,
+  StateListing,
 } from "../domain/state-amendment.js";
+import {
+  MUNICIPAL_TRANSFER,
+  destinationKey,
+  normalizedAmendmentNumber,
+} from "../domain/state-destination.js";
 export function createPrismaStateAmendmentRepository(
-  database: Pick<PrismaClient, "emenda_estadual" | "emenda_estadual_execucao" | "state_expense_document" | "state_expense_import">,
+  database: Pick<PrismaClient, "emenda_estadual" | "emenda_estadual_execucao" | "state_expense_document" | "state_expense_import" | "state_amendment_destination">,
 ): StateAmendmentRepository {
+  // Listings keep the source spelling ("0799/2024"); destinations use the
+  // normalized number of the documentary ETL ("799").
+  async function destinationsFor(listings: Pick<StateListing, "ano" | "numero_emenda">[]) {
+    const keys = listings.flatMap((row) => {
+      const number = normalizedAmendmentNumber(row.ano, row.numero_emenda);
+      return number ? [{ year: row.ano, amendment_number: number }] : [];
+    });
+    return keys.length
+      ? database.state_amendment_destination.findMany({ where: { OR: keys } })
+      : [];
+  }
+  async function listingsInMunicipality(code: string, year?: number) {
+    const located = await database.state_amendment_destination.findMany({
+      where: {
+        destination: MUNICIPAL_TRANSFER,
+        creditor_municipality_ibge: code,
+        ...(year ? { year } : {}),
+      },
+      distinct: ["year", "amendment_number"],
+      select: { year: true, amendment_number: true },
+    });
+    if (!located.length) return [];
+    const keys = new Set(located.map((row) => `${row.year}:${row.amendment_number}`));
+    const candidates = await database.emenda_estadual.findMany({
+      where: { ano: { in: [...new Set(located.map((row) => row.year))] } },
+      select: { id: true, ano: true, numero_emenda: true },
+    });
+    return candidates
+      .filter((row) => keys.has(destinationKey(row.ano, row.numero_emenda)))
+      .map((row) => row.id);
+  }
   function stateExecutionFilter(
     filters: StateFilters,
   ): Prisma.emenda_estadual_execucaoWhereInput {
@@ -46,6 +83,7 @@ export function createPrismaStateAmendmentRepository(
           }
         : {}),
     };
+    const conditions: Prisma.emenda_estadualWhereInput[] = [];
     if (filters.funcao || filters.orgao) {
       const identities = await database.emenda_estadual_execucao.findMany({
         where: stateExecutionFilter(filters),
@@ -53,8 +91,13 @@ export function createPrismaStateAmendmentRepository(
         select: { ano: true, numero_emenda: true },
       });
       // An empty OR must not turn into an unfiltered listing.
-      where.OR = identities.length ? identities : [{ id: -1 }];
+      conditions.push({ OR: identities.length ? identities : [{ id: -1 }] });
     }
+    if (filters.municipio) {
+      const ids = await listingsInMunicipality(filters.municipio, filters.ano);
+      conditions.push({ id: { in: ids.length ? ids : [-1] } });
+    }
+    if (conditions.length) where.AND = conditions;
     return where;
   }
   async function list(
@@ -88,18 +131,21 @@ export function createPrismaStateAmendmentRepository(
           orderBy: [{ nome_orgao: "asc" }, { funcao: "asc" }, { id: "asc" }],
         })
       : [];
-    return { total, listings, executions };
+    return { total, listings, executions, destinations: await destinationsFor(listings) };
   }
   return {
     list,
     async summary(year) {
-      const [listings, executions] = await Promise.all([
+      const [listings, executions, destinations] = await Promise.all([
         database.emenda_estadual.findMany({ where: year ? { ano: year } : {} }),
         database.emenda_estadual_execucao.findMany({
           where: year ? { ano: year } : {},
         }),
+        database.state_amendment_destination.findMany({
+          where: year ? { year } : {},
+        }),
       ]);
-      return { listings, executions };
+      return { listings, executions, destinations };
     },
     async find(year, number) {
       const listing = await database.emenda_estadual.findUnique({
@@ -110,17 +156,16 @@ export function createPrismaStateAmendmentRepository(
         where: { ano: year, numero_emenda: number },
         orderBy: [{ nome_orgao: "asc" }, { funcao: "asc" }, { id: "asc" }],
       });
-      const normalized = /^\s*(\d+)(?:\s*\/\s*(\d{4}))?\s*$/.exec(number);
-      const amendmentNumber = normalized && (!normalized[2] || Number(normalized[2]) === year)
-        ? String(Number(normalized[1])) : "invalid";
-      const [documents, imports] = await Promise.all([
+      const amendmentNumber = normalizedAmendmentNumber(year, number) ?? "invalid";
+      const [documents, imports, destinations] = await Promise.all([
         database.state_expense_document.findMany({
           where: { year, amendment_number: amendmentNumber },
           orderBy: [{ month: "asc" }, { kind: "asc" }, { id: "asc" }],
         }),
         database.state_expense_import.findMany({ where: { year }, orderBy: [{ month: "asc" }, { kind: "asc" }] }),
+        database.state_amendment_destination.findMany({ where: { year, amendment_number: amendmentNumber } }),
       ]);
-      return { listing, executions, documents, imports };
+      return { listing, executions, documents, imports, destinations };
     },
   };
 }

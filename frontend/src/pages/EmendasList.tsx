@@ -1,4 +1,7 @@
+import { useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useAmendmentSearch } from "../shared/hooks/useAmendmentSearch";
+import { loadGeography } from "../features/territory/api";
 import { sourceLabel } from "../shared/lib/sources";
 import { formatInt } from "../shared/lib/format";
 import { Badge, PageHeading, QueryState } from "../shared/components/DesignSystem";
@@ -23,6 +26,19 @@ export default function EmendasList() {
     clear,
   } = useAmendmentSearch();
   const data = query.data;
+  const geography = useQuery({
+    queryKey: ["pb-geography"],
+    queryFn: loadGeography,
+    staleTime: Infinity,
+    enabled: strategy.fields.some((field) => field.suggestions),
+  });
+  const municipalities = useMemo(
+    () =>
+      (geography.data?.features ?? [])
+        .map((feature) => feature.properties.name)
+        .sort((a, b) => a.localeCompare(b, "pt-BR")),
+    [geography.data],
+  );
   return (
     <div className="page-stack">
       <PageHeading
@@ -62,10 +78,18 @@ export default function EmendasList() {
                 <input
                   value={draft[field.key]}
                   placeholder={field.placeholder}
+                  list={field.suggestions ? "municipality-options" : undefined}
                   onChange={(event) =>
                     setDraft({ ...draft, [field.key]: event.target.value })
                   }
                 />
+                {field.suggestions && (
+                  <datalist id="municipality-options">
+                    {municipalities.map((name) => (
+                      <option key={name} value={name} />
+                    ))}
+                  </datalist>
+                )}
               </label>
             ))}
           </div>

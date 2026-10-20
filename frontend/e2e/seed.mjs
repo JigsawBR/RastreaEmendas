@@ -18,6 +18,12 @@ export async function seedDatabase(db) {
     { kind: "payment", link_status: "candidate", payload: { numeroEmpenho: 42, numeroDocumento: 123, valorPago: 100, nomeCredor: "Construtora E2E" } },
     { kind: "commitment", link_status: "confirmed", payload: { numeroEmpenho: 43, descricaoTipo: "ANULAÇÃO TOTAL", valorCalculado: -100 } },
   ].map((record, i) => ({ ...record, id: `state-e2e-${i}`, year: 2024, month: 12, amendment_number: "4", source_url: "https://api.dados.pb.gov.br/api/v1/despesas/notas_empenho?ano=2024&mes=12", collected_at: collectedAt })) });
+  // A transfer to Cajazeiras city hall marks the city; the NGO seated in João
+  // Pessoa must not mark João Pessoa.
+  await db.state_amendment_destination.createMany({ data: [
+    { creditor_document: "08923971000115", creditor_name: "PREFEITURA MUNICIPAL DE CAJAZEIRAS", application_modality: "40", destination: "municipal_transfer", creditor_municipality: "CAJAZEIRAS", creditor_municipality_ibge: "2503704", committed_value: 100, note_count: 1 },
+    { creditor_document: "03303706000110", creditor_name: "Associação E2E", application_modality: "50", destination: "private_nonprofit", creditor_municipality: "JOAO PESSOA", creditor_municipality_ibge: "2507507", committed_value: 50, note_count: 1 },
+  ].map(record => ({ ...record, year: 2024, amendment_number: "4" })) });
   await db.unidade_gestora.create({
     data: { codigo: "999001", nome: "Órgão E2E Federal", uf: "PB" },
   });

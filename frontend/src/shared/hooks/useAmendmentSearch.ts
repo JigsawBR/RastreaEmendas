@@ -66,6 +66,8 @@ export function useAmendmentSearch() {
   function changeSource(value: AmendmentSource) {
     const next = new URLSearchParams(search);
     next.set("origem", value);
+    // Federal municipio is a free-text locality; the state one must be an
+    // official name, so the value is not carried across sources.
     next.delete("municipio");
     next.delete("beneficiario");
     next.delete("pagina");

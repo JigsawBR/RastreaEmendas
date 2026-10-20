@@ -16,6 +16,22 @@ export type StateSummary = StateTotals & {
   linhasSemListagem: number;
   valorDestinado: number | null;
   taxaExecucao: number | null;
+  destinos: {
+    emendasComMunicipioBeneficiado: number;
+    porDestino: { destino: string; rotulo: string; emendas: number; valorEmpenhadoLiquido: number }[];
+  };
+};
+export type StateDestination = {
+  credor: string | null;
+  documentoCredor: string | null;
+  modalidadeAplicacao: string | null;
+  destino: string;
+  destinoRotulo: string;
+  municipioCredor: string | null;
+  municipioBeneficiado: string | null;
+  codigoIbge: string | null;
+  valorEmpenhadoLiquido: number;
+  notas: number;
 };
 export type StateAmendmentItem = Omit<
   EmendaListItem,
@@ -60,6 +76,8 @@ export type StateAmendmentDetail = StateTotals & {
     valorLiquidado: number | null;
     valorPago: number | null;
   }[];
+  municipiosBeneficiados: string[];
+  destinos: StateDestination[];
   documentos: StateExpenseDocument[];
   trajeto: { codigo: string; titulo: string; evidencias: string[]; lacuna: string | null; fonte: string | null }[];
   coberturaDocumental: {
@@ -90,6 +108,7 @@ export type StateFilters = {
   beneficiario?: string;
   funcao?: string;
   orgao?: string;
+  municipio?: string;
   limit?: number;
   offset?: number;
 };
@@ -116,5 +135,6 @@ export const stateApi = {
       beneficiario: params.beneficiario,
       funcao: params.funcao,
       orgao: params.orgao,
+      municipio: params.municipio,
     }),
 };

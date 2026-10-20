@@ -19,8 +19,9 @@ from sqlalchemy import delete, insert
 
 from etl.shared import config
 from etl.shared.load import BATCH_SIZE, get_engine, init_db
-from etl.shared.models import StateExpenseDocument, StateExpenseImport
+from etl.shared.models import StateAmendmentDestination, StateExpenseDocument, StateExpenseImport
 from etl.shared.years import parse_years
+from etl.state.destinations import build_destinations
 from etl.state.extract import fetch_listagem
 from etl.state.pb import BASE_ORCAMENTO, paginated
 
@@ -168,14 +169,16 @@ def load_documents(engine, year: int, months=None, *, refresh=False):
             logging.info("PB documentos: %s %d-%02d", kind, year, month)
             snapshots[kind, month] = fetch_month(kind, year, month, refresh=refresh)
     documents, imports = link_documents(year, listings, snapshots)
+    destinations = build_destinations(documents)
     # The selected months constitute a new YEAR snapshot. Partial scope is
     # explicit in import metadata and the UI; no mixture of stale links.
     with engine.begin() as connection:
-        for model, rows in [(StateExpenseDocument, documents), (StateExpenseImport, imports)]:
+        for model, rows in [(StateExpenseDocument, documents), (StateExpenseImport, imports),
+                            (StateAmendmentDestination, destinations)]:
             connection.execute(delete(model).where(model.year == year))
             for start in range(0, len(rows), BATCH_SIZE):
                 connection.execute(insert(model), rows[start:start + BATCH_SIZE])
-    logging.info("PB %d: %d documentos vinculados", year, len(documents))
+    logging.info("PB %d: %d documentos vinculados, %d destinos", year, len(documents), len(destinations))
 
 
 def main():

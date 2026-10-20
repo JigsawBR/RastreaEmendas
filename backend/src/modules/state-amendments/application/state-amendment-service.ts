@@ -10,15 +10,31 @@ import {
   sumStateValues,
 } from "../domain/state-values.js";
 import { buildStateTrail } from "../domain/state-trail.js";
+import {
+  beneficiaryMunicipalities,
+  describeDestinations,
+  destinationKey,
+  summarizeDestinations,
+} from "../domain/state-destination.js";
+import type { StateDestination } from "../domain/state-destination.js";
+function groupDestinations(destinations: StateDestination[] = []) {
+  const groups = new Map<string, StateDestination[]>();
+  for (const row of destinations) {
+    const key = `${row.year}:${row.amendment_number}`;
+    groups.set(key, [...(groups.get(key) ?? []), row]);
+  }
+  return groups;
+}
 export function createStateAmendmentService(
   repository: StateAmendmentRepository,
 ) {
   return {
     async list(filters: StateFilters, pagination?: Pagination) {
-      const { total, listings, executions } = await repository.list(
+      const { total, listings, executions, destinations } = await repository.list(
         filters,
         pagination,
       );
+      const destinationsByIdentity = groupDestinations(destinations);
       const byIdentity = new Map<string, StateExecution[]>();
       for (const row of executions) {
         const key = stateIdentity(row);
@@ -39,7 +55,9 @@ export function createStateAmendmentService(
           secretaria: row.secretaria,
           objeto: row.objeto,
           valorDestinado: row.valor === null ? null : Number(row.valor),
-          localidades: [],
+          localidades: beneficiaryMunicipalities(
+            destinationsByIdentity.get(destinationKey(row.ano, row.numero_emenda)) ?? [],
+          ),
           funcoes: [
             ...new Set(matches.flatMap((e) => (e.funcao ? [e.funcao] : []))),
           ],
@@ -49,12 +67,13 @@ export function createStateAmendmentService(
       return { total, items };
     },
     async summary(ano?: number) {
-      const { listings, executions: allExecutions } =
+      const { listings, executions: allExecutions, destinations = [] } =
         await repository.summary(ano);
       const identities = new Set(listings.map(stateIdentity));
       const executions = allExecutions.filter((row) =>
         identities.has(stateIdentity(row)),
       );
+      const listed = new Set(listings.map((row) => destinationKey(row.ano, row.numero_emenda)));
       const executedIdentities = new Set(executions.map(stateIdentity));
       const totals = sumStateValues(executions);
       return {
@@ -76,6 +95,9 @@ export function createStateAmendmentService(
           ? listings.reduce((sum, row) => sum + Number(row.valor ?? 0), 0)
           : null,
         ...totals,
+        destinos: summarizeDestinations(
+          destinations.filter((row) => listed.has(`${row.year}:${row.amendment_number}`)),
+        ),
         taxaExecucao:
           totals.valorEmpenhado !== null &&
           totals.valorEmpenhado > 0 &&
@@ -90,7 +112,7 @@ export function createStateAmendmentService(
     async detail(ano: number, number: string) {
       const result = await repository.find(ano, number);
       if (!result) return null;
-      const { listing, executions: rows, documents, imports } = result;
+      const { listing, executions: rows, documents, imports, destinations = [] } = result;
       return {
         ano,
         numeroEmenda: listing.numero_emenda,
@@ -121,7 +143,9 @@ export function createStateAmendmentService(
             row.valor_liquidado === null ? null : Number(row.valor_liquidado),
           valorPago: row.valor_pago === null ? null : Number(row.valor_pago),
         })),
-        ...buildStateTrail(listing, rows, documents, imports),
+        municipiosBeneficiados: beneficiaryMunicipalities(destinations),
+        destinos: describeDestinations(destinations),
+        ...buildStateTrail(listing, rows, documents, imports, destinations),
       };
     },
   };

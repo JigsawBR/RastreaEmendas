@@ -1,4 +1,6 @@
 import type { StateDocument, StateExecution, StateImport, StateListing } from "./state-amendment.js";
+import { describeDestinations } from "./state-destination.js";
+import type { StateDestination } from "./state-destination.js";
 
 const text = (row: Record<string, unknown>, key: string) =>
   row[key] == null || String(row[key]).trim() === "" ? null : String(row[key]).trim();
@@ -10,7 +12,24 @@ const numeric = (row: Record<string, unknown>, key: string) => {
 };
 const unique = (values: (string | null | undefined)[]) => [...new Set(values.filter((v): v is string => Boolean(v?.trim())))];
 
-export function buildStateTrail(listing: StateListing, rows: StateExecution[], documents: StateDocument[] = [], imports: StateImport[] = []) {
+function destinationStep(listing: StateListing, destinations: StateDestination[]) {
+  const described = describeDestinations(destinations);
+  const municipal = described.filter(d => d.municipioBeneficiado);
+  const others = described.filter(d => !d.municipioBeneficiado);
+  const lacuna = municipal.length
+    ? others.length ? "Parte do empenho vai a entidades ou é aplicada pelo Estado; o endereço desses credores é sede, não município beneficiado." : null
+    : listing.beneficiario_final ? null
+    : others.length ? "Empenho sem transferência a município: o endereço do credor é sede, não município beneficiado. O objeto é exibido sem inferir município."
+    : "Beneficiário final não preenchido. O objeto é exibido sem inferir município ou entidade.";
+  return {
+    evidencias: unique([listing.beneficiario_final,
+      ...municipal.map(d => `Transferência ao município de ${d.municipioBeneficiado} (credor: ${d.credor ?? "não informado"})`),
+      listing.objeto]),
+    lacuna,
+  };
+}
+
+export function buildStateTrail(listing: StateListing, rows: StateExecution[], documents: StateDocument[] = [], imports: StateImport[] = [], destinations: StateDestination[] = []) {
   const mapped = documents.map((document) => {
     const p = document.payload && typeof document.payload === "object" ? document.payload as Record<string, unknown> : {};
     const type = text(p, "descricaoTipo") ?? text(p, "tipoLiquidacao") ?? text(p, "tipoPagamento");
@@ -63,7 +82,7 @@ export function buildStateTrail(listing: StateListing, rows: StateExecution[], d
         lacuna: sources.length ? "A fonte e a classificação orçamentária não identificam, sozinhas, toda a origem da arrecadação." : "Fonte de recursos não localizada na base consultada.", fonte: sourceUrl("orcamento/execucao_emendas") },
       { codigo: "author", titulo: "Quem destinou", evidencias: unique([listing.nome_deputado]), lacuna: listing.nome_deputado ? null : "Autor não informado.", fonte: sourceUrl("orcamento/listagem_emendas") },
       { codigo: "requester", titulo: "Quem solicitou", evidencias: [], lacuna: "Solicitante original não identificado pela fonte. Autoria parlamentar não comprova quem apresentou a demanda.", fonte: null },
-      { codigo: "destination", titulo: "Para onde foi destinado", evidencias: unique([listing.beneficiario_final, listing.objeto]), lacuna: listing.beneficiario_final ? null : "Beneficiário final não preenchido. O objeto é exibido sem inferir município ou entidade.", fonte: sourceUrl("orcamento/listagem_emendas") },
+      { codigo: "destination", titulo: "Para onde foi destinado", ...destinationStep(listing, destinations), fonte: sourceUrl("orcamento/listagem_emendas") },
       { codigo: "executor", titulo: "Quem executa", evidencias: organs, lacuna: organs.length ? null : "Órgão executor não localizado.", fonte: sourceUrl("orcamento/execucao_emendas") },
       { codigo: "creditor", titulo: "Quem consta como credor", evidencias: unique(confirmed.map(d => d.credor)), lacuna: "Credor da nota não equivale necessariamente ao beneficiário final. A existência da nota não comprova pagamento.", fonte: sourceUrl("despesas/notas_empenho") },
       { codigo: "spending", titulo: "Foi efetivamente desembolsado?", evidencias: positive.filter(d => d.fase === "payment").map(d => `Pagamento ${d.numero} · ${d.data ?? "data não informada"}`), lacuna: "Consulte documentos e valores agregados abaixo. Vínculos candidatos e notas anuladas não comprovam desembolso.", fonte: sourceUrl("despesas/autorizacoes_pagamento") },
