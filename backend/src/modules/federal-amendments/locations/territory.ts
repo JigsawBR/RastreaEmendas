@@ -10,12 +10,13 @@ type Plan = { nome_beneficiario: string | null; valor_custeio: unknown; valor_in
 type Expense = { municipio: string | null; valor_empenhado: unknown; valor_pago: unknown };
 type StateListing = { ano: number; numero_emenda: string };
 type StateRecord = { year: number; amendment_number: string; payload: unknown };
-type StateDestination = { year: number; amendment_number: string; destination: string; creditor_municipality_ibge: string | null };
+type StateDestination = { year: number; amendment_number: string; destination: string; creditor_municipality_ibge: string | null; committed_value?: unknown };
 
 export function buildMunicipalityMap(allocations: Allocation[], plans: Plan[], expenses: Expense[], listings: StateListing[], destinations: StateDestination[], agreements: StateRecord[]) {
   const rows = new Map(pbMunicipalities.map(([code, name]) => [code, { codigoIbge: code, municipio: name,
     federal: { comRecursos: false, emendas: new Set<string>(), empenhado: 0, pago: 0, planos: 0, valorPlanos: 0, despesaEmpenhado: 0, despesaPago: 0 },
     estadual: new Map<string, { ano: number; numero: string; fontes: Set<string> }>(),
+    valorTransferido: 0,
   }]));
   let nonMunicipalAllocations = 0, nonMunicipalState = 0;
   for (const record of allocations) {
@@ -47,18 +48,22 @@ export function buildMunicipalityMap(allocations: Allocation[], plans: Plan[], e
   const linkState = (year: number, amendment: string, code: string | null | undefined, basis: string) => {
     const listing = known.get(`${year}:${amendment}`);
     const row = listing && code ? rows.get(code) : undefined;
-    if (!listing || !row) return;
+    if (!listing || !row) return undefined;
     const key = `${listing.ano}:${listing.numero_emenda}`;
     linkedState.add(key);
     const item = row.estadual.get(key) ?? { ano: listing.ano, numero: listing.numero_emenda, fontes: new Set<string>() };
     item.fontes.add(basis);
     row.estadual.set(key, item);
+    return row;
   };
   // Only a municipal transfer names the beneficiary city; a private entity's
   // address is its seat, not where the money is applied.
-  for (const record of destinations)
-    if (record.destination === "municipal_transfer")
-      linkState(record.year, record.amendment_number, record.creditor_municipality_ibge, "Transferência ao município na nota de empenho");
+  for (const record of destinations) {
+    if (record.destination !== "municipal_transfer") continue;
+    const row = linkState(record.year, record.amendment_number, record.creditor_municipality_ibge, "Transferência ao município na nota de empenho");
+    // Net commitment transferred to the city; agreements carry no such value.
+    if (row) row.valorTransferido += Number(record.committed_value ?? 0);
+  }
   // Same rule for agreements: the convenente's municipality is the beneficiary
   // only when the convenente is the municipality itself, never an NGO's seat.
   for (const record of agreements) {
@@ -70,7 +75,7 @@ export function buildMunicipalityMap(allocations: Allocation[], plans: Plan[], e
   return {
     items: [...rows.values()].map(row => ({ codigoIbge: row.codigoIbge, municipio: officialNames.get(row.codigoIbge)!,
       federal: { ...row.federal, comRecursos: [row.federal.empenhado, row.federal.pago, row.federal.valorPlanos, row.federal.despesaEmpenhado, row.federal.despesaPago].some(positive), emendas: row.federal.emendas.size },
-      estadual: { emendas: [...row.estadual.values()].map(item => ({ ...item, fontes: [...item.fontes] })), quantidade: row.estadual.size },
+      estadual: { emendas: [...row.estadual.values()].map(item => ({ ...item, fontes: [...item.fontes] })), quantidade: row.estadual.size, valorTransferido: row.valorTransferido },
     })),
     semMunicipio: { alocacoesFederais: nonMunicipalAllocations, emendasEstaduais: nonMunicipalState },
   };

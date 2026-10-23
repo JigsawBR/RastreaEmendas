@@ -13,7 +13,8 @@ test("mapa cobre 223 municípios e mantém valores federais e vínculos estaduai
   ], [{ nome_beneficiario: "MUNICIPIO DE JOAO PESSOA", valor_custeio: 1000, valor_investimento: 0 }],
   [{ municipio: "CAMPINA GRANDE", valor_empenhado: 40, valor_pago: 10 }],
   [{ ano: 2024, numero_emenda: "0576/2024" }, { ano: 2024, numero_emenda: "0799" }],
-  [{ year: 2024, amendment_number: "576", destination: "municipal_transfer", creditor_municipality_ibge: "2503704" },
+  [{ year: 2024, amendment_number: "576", destination: "municipal_transfer", creditor_municipality_ibge: "2503704", committed_value: 300 },
+   { year: 2024, amendment_number: "576", destination: "municipal_transfer", creditor_municipality_ibge: "2503704", committed_value: "200.50" },
    { year: 2024, amendment_number: "799", destination: "private_nonprofit", creditor_municipality_ibge: "2507507" },
    { year: 2024, amendment_number: "799", destination: "municipal_transfer", creditor_municipality_ibge: null },
    { year: 2023, amendment_number: "576", destination: "municipal_transfer", creditor_municipality_ibge: "2516201" }],
@@ -27,6 +28,8 @@ test("mapa cobre 223 municípios e mantém valores federais e vínculos estaduai
   assert.equal(cajazeiras.estadual.quantidade, 1);
   assert.equal(cajazeiras.estadual.emendas[0].numero, "0576/2024");
   assert.equal(cajazeiras.estadual.emendas[0].fontes.length, 2);
+  assert.equal(cajazeiras.estadual.valorTransferido, 500.5, "soma os empenhos transferidos; convênio não tem valor");
+  assert.equal(result.items.find(r => r.municipio === "Sousa").estadual.valorTransferido, 0, "exercício fora da listagem não soma");
   assert.equal(result.items.find(r => r.municipio === "Sousa").estadual.quantidade, 0);
   assert.equal(result.items.find(r => r.municipio === "João Pessoa").estadual.quantidade, 0, "sede de entidade não é município beneficiado");
   assert.equal(result.items.find(r => r.municipio === "Sousa").federal.comRecursos, false);

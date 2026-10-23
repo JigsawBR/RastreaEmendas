@@ -730,7 +730,21 @@ p {
 .map-federal { fill: #087f63; background: #087f63; }
 .map-state { fill: #c47a16; background: #c47a16; }
 .map-both { fill: #6651a8; background: #6651a8; }
-.map-none { fill: #e3ebe7; background: #e3ebe7; }
+.map-none { fill: #e4e4e2; background: #e4e4e2; }
+/* Sequential ramps, light to dark; each origin keeps the hue of its swatch.
+   The lightest step stays clearly apart from the neutral "no value" grey. */
+.map-federal-1 { fill: #b5ddca; background: #b5ddca; }
+.map-federal-2 { fill: #93cdb5; background: #93cdb5; }
+.map-federal-3 { fill: #52ab89; background: #52ab89; }
+.map-federal-4 { fill: #158763; background: #158763; }
+.map-federal-5 { fill: #075a43; background: #075a43; }
+.map-state-1 { fill: #f7d59c; background: #f7d59c; }
+.map-state-2 { fill: #f3c27a; background: #f3c27a; }
+.map-state-3 { fill: #e09a3c; background: #e09a3c; }
+.map-state-4 { fill: #b86f12; background: #b86f12; }
+.map-state-5 { fill: #7a4706; background: #7a4706; }
+.map-legend-title { color: var(--muted); }
+.map-indicator-note { margin: 10px 0 0; }
 .municipality-map-layout { display: grid; grid-template-columns: minmax(0, 1fr) 310px; gap: 24px; margin-top: 18px; }
 .municipality-map-canvas { min-width: 0; align-self: start; padding-top: 12px; background: linear-gradient(145deg, #f5faf7, #fcfdfc); border-radius: 14px; overflow: hidden; }
 .municipality-map-canvas svg { width: 100%; height: auto; display: block; }

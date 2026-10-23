@@ -12,7 +12,7 @@ municipalityMapRouter.get("/mapa", async (req, res, next) => {
       prisma.transferegov_plano_acao.findMany({ where: { uf_beneficiario: "PB", ...(year ? { ano_emenda: year } : {}) }, select: { nome_beneficiario: true, valor_custeio: true, valor_investimento: true } }),
       prisma.despesa_mensal.findMany({ where: { uf: "PB", ...(year ? { ano_mes: { startsWith: String(year) } } : {}) }, select: { municipio: true, valor_empenhado: true, valor_pago: true } }),
       prisma.emenda_estadual.findMany({ where: year ? { ano: year } : {}, select: { ano: true, numero_emenda: true } }),
-      prisma.state_amendment_destination.findMany({ where: { ...(year ? { year } : {}), destination: "municipal_transfer" }, select: { year: true, amendment_number: true, destination: true, creditor_municipality_ibge: true } }),
+      prisma.state_amendment_destination.findMany({ where: { ...(year ? { year } : {}), destination: "municipal_transfer" }, select: { year: true, amendment_number: true, destination: true, creditor_municipality_ibge: true, committed_value: true } }),
       prisma.amendment_evidence.findMany({ where: { origin: "state", ...(year ? { year } : {}), source: "pb_agreements", kind: "agreement", status: "confirmed" }, select: { year: true, amendment_number: true, payload: true } }),
       prisma.evidence_import.findMany({ where: { origin: "state", source: "pb_agreements", ...(year ? { year } : {}) }, select: { year: true, collected_at: true } }),
     ]);

@@ -65,6 +65,14 @@ async function render(module, url, populate) {
   return output;
 }
 try {
+  const { quantileBreaks, classOf, classLabels } = await server.ssrLoadModule("/src/features/territory/scale.ts");
+  const evenly = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
+  assert.deepEqual(quantileBreaks(evenly), [30, 50, 70, 90], "quintis ignoram zero");
+  assert.deepEqual([0, 10, 30, 100].map((v) => classOf(v, [30, 50, 70, 90])), [0, 1, 2, 5]);
+  assert.deepEqual(quantileBreaks([5, 5, 5, 5, 9]), [9], "valores repetidos fundem faixas");
+  assert.equal(classLabels([5, 5, 5, 5, 9], [9]).length, 2);
+  assert.deepEqual(quantileBreaks([0, 0]), []);
+  assert.deepEqual(classLabels([0], []), []);
   const home = await render("/src/pages/Home.tsx", "/?ano=2024", (c) =>
     c.setQueryData(["resumo", "federal", 2024], summary),
   );
