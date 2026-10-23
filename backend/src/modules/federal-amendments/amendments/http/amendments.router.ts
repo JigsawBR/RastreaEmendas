@@ -1,60 +1,27 @@
 import { Router } from "express";
 import { prisma } from "../../../../shared/infrastructure/database/prisma.js";
-import { findAmendments } from "../application/find-amendments.js";
+import { parseAmendmentOrder } from "../../../../shared/ordering/amendment-order.js";
+import { listAmendments } from "../application/list-amendments.js";
 
 export const amendmentsRouter = Router();
 
-// RF-02: lista emendas com filtros.
+// RF-02: lista emendas com filtros; RF-08 resumido em cada item.
 amendmentsRouter.get("/", async (req, res) => {
-  const ano = req.query.ano ? Number(req.query.ano) : undefined;
-  const parlamentar = req.query.parlamentar as string | undefined;
-  const municipio = req.query.municipio as string | undefined;
-  const funcao = req.query.funcao as string | undefined;
   const limit = Math.min(Number(req.query.limit ?? 50), 200);
   const offset = Number(req.query.offset ?? 0);
-
-  const { total, rows } = await findAmendments(
+  const ordem = parseAmendmentOrder(req.query.ordem);
+  const { total, items } = await listAmendments(
     {
-      ano,
-      parlamentar,
-      municipio,
-      funcao,
+      ano: req.query.ano ? Number(req.query.ano) : undefined,
+      parlamentar: req.query.parlamentar as string | undefined,
+      municipio: req.query.municipio as string | undefined,
+      funcao: req.query.funcao as string | undefined,
       orgao: req.query.orgao as string | undefined,
     },
+    ordem,
     { limit, offset },
   );
-
-  const items = rows.map((emenda) => {
-    let empenhado = 0;
-    let liquidado = 0;
-    let pago = 0;
-    const localidades = new Set<string>();
-    const funcoes = new Set<string>();
-
-    for (const alocacao of emenda.emenda_alocacao) {
-      empenhado += Number(alocacao.valor_empenhado ?? 0);
-      liquidado += Number(alocacao.valor_liquidado ?? 0);
-      pago += Number(alocacao.valor_pago ?? 0);
-      if (alocacao.localidade_gasto) localidades.add(alocacao.localidade_gasto);
-      if (alocacao.funcao) funcoes.add(alocacao.funcao);
-    }
-
-    return {
-      codigoEmenda: emenda.codigo_emenda,
-      ano: emenda.ano,
-      tipoEmenda: emenda.tipo_emenda,
-      numeroEmenda: emenda.numero_emenda,
-      nomeAutor: emenda.nome_autor,
-      autor: emenda.autor,
-      localidades: Array.from(localidades),
-      funcoes: Array.from(funcoes),
-      valorEmpenhado: empenhado,
-      valorLiquidado: liquidado,
-      valorPago: pago,
-    };
-  });
-
-  res.json({ total, limit, offset, items });
+  res.json({ total, limit, offset, ordem, items });
 });
 
 amendmentsRouter.get("/:codigo", async (req, res) => {

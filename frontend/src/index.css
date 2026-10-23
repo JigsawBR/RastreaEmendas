@@ -376,6 +376,18 @@ p {
 .results-header h2 {
   margin-bottom: 16px;
 }
+.results-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-end;
+}
+.inline-field {
+  font-size: 13px;
+}
+.data-table td.amount {
+  white-space: nowrap;
+}
 .results-header p {
   margin: 0;
 }
@@ -703,6 +715,9 @@ p {
 .evidence-card h3 { margin: .75rem 0; }
 .evidence-card p { margin: .6rem 0; }
 .evidence-links { display: flex; gap: 1rem; flex-wrap: wrap; }
+.evidence-candidates { border-top: 1px solid var(--border, #d9e2e7); padding-top: 1rem; margin-top: 1rem; }
+.evidence-candidates > summary { color: var(--brand); cursor: pointer; font-weight: 600; min-height: 44px; display: flex; align-items: center; }
+.evidence-rule { background: #fbf6ec; border-radius: 8px; padding: .75rem 1rem; margin: .75rem 0; }
 .evidence-panel select { max-width: 100%; margin: .5rem; padding: .5rem; }
 .municipality-map-panel { margin-bottom: 28px; }
 .municipality-map-heading { display: flex; align-items: start; justify-content: space-between; gap: 24px; }

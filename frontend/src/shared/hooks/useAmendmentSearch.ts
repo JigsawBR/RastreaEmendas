@@ -5,6 +5,8 @@ import { readSource } from "../lib/sources";
 import type { AmendmentSource } from "../lib/sources";
 import { getAmendmentSource } from "../lib/amendment-source";
 import type { SearchFilters } from "../lib/amendment-source";
+import { readOrder } from "../lib/amendment-order";
+import type { AmendmentOrder } from "../lib/amendment-order";
 const PAGE_SIZE = 20;
 function readFilters(search: URLSearchParams): SearchFilters {
   const year = search.get("ano") ?? "2024";
@@ -37,10 +39,12 @@ export function useAmendmentSearch() {
     (requestedPage - 1) * PAGE_SIZE <= 2147483647
       ? requestedPage - 1
       : 0;
-  const params = strategy.params(filters, {
-    limit: PAGE_SIZE,
-    offset: page * PAGE_SIZE,
-  });
+  const order = readOrder(search.get("ordem"));
+  const params = {
+    ...strategy.params(filters, { limit: PAGE_SIZE, offset: page * PAGE_SIZE }),
+    // The default order is omitted so that it stays out of URLs and cache keys.
+    ordem: order === "recentes" ? undefined : order,
+  };
   const query = useQuery({
     queryKey: ["emendas", source, params],
     queryFn: () => strategy.list(params),
@@ -61,6 +65,14 @@ export function useAmendmentSearch() {
     for (const field of strategy.fields) {
       if (draft[field.key].trim()) next.set(field.key, draft[field.key].trim());
     }
+    if (order !== "recentes") next.set("ordem", order);
+    setSearch(next);
+  }
+  function changeOrder(value: AmendmentOrder) {
+    const next = new URLSearchParams(search);
+    if (value === "recentes") next.delete("ordem");
+    else next.set("ordem", value);
+    next.delete("pagina");
     setSearch(next);
   }
   function changeSource(value: AmendmentSource) {
@@ -90,7 +102,9 @@ export function useAmendmentSearch() {
     backTo: "/emendas?" + search.toString(),
     exportUrl: strategy.exportUrl(params),
     totalPages: Math.max(1, Math.ceil((query.data?.total ?? 0) / PAGE_SIZE)),
+    order,
     apply,
+    changeOrder,
     changeSource,
     goToPage,
     clear: () => setSearch({ origem: source, ano: "" }),

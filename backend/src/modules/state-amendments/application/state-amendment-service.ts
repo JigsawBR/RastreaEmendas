@@ -9,17 +9,19 @@ import {
   stateIdentity,
   sumStateValues,
 } from "../domain/state-values.js";
-import { buildStateTrail } from "../domain/state-trail.js";
+import { buildStateTrail, stateTraceability } from "../domain/state-trail.js";
 import {
   beneficiaryMunicipalities,
   describeDestinations,
   destinationKey,
   summarizeDestinations,
 } from "../domain/state-destination.js";
-import type { StateDestination } from "../domain/state-destination.js";
-function groupDestinations(destinations: StateDestination[] = []) {
-  const groups = new Map<string, StateDestination[]>();
-  for (const row of destinations) {
+import { sortAmendments } from "../../../shared/ordering/amendment-order.js";
+import type { AmendmentOrder } from "../../../shared/ordering/amendment-order.js";
+/** Groups records keyed by the documentary ETL identity (year + normalized number). */
+function groupByAmendment<T extends { year: number; amendment_number: string }>(rows: T[] = []) {
+  const groups = new Map<string, T[]>();
+  for (const row of rows) {
     const key = `${row.year}:${row.amendment_number}`;
     groups.set(key, [...(groups.get(key) ?? []), row]);
   }
@@ -29,12 +31,15 @@ export function createStateAmendmentService(
   repository: StateAmendmentRepository,
 ) {
   return {
-    async list(filters: StateFilters, pagination?: Pagination) {
-      const { total, listings, executions, destinations } = await repository.list(
+    async list(filters: StateFilters, pagination?: Pagination, order: AmendmentOrder = "recentes") {
+      // Value and completeness orders need every match before paginating.
+      const inMemory = order !== "recentes";
+      const { total, listings, executions, destinations, documents, imports = [] } = await repository.list(
         filters,
-        pagination,
+        inMemory ? undefined : pagination,
       );
-      const destinationsByIdentity = groupDestinations(destinations);
+      const destinationsByIdentity = groupByAmendment(destinations);
+      const documentsByIdentity = groupByAmendment(documents);
       const byIdentity = new Map<string, StateExecution[]>();
       for (const row of executions) {
         const key = stateIdentity(row);
@@ -62,9 +67,20 @@ export function createStateAmendmentService(
             ...new Set(matches.flatMap((e) => (e.funcao ? [e.funcao] : []))),
           ],
           ...sumStateValues(matches),
+          rastreabilidade: stateTraceability(
+            matches,
+            documentsByIdentity.get(destinationKey(row.ano, row.numero_emenda)) ?? [],
+            imports.filter((item) => item.year === row.ano),
+          ),
         };
       });
-      return { total, items };
+      const sorted = sortAmendments(items, order);
+      return {
+        total,
+        items: inMemory && pagination
+          ? sorted.slice(pagination.offset, pagination.offset + pagination.limit)
+          : sorted,
+      };
     },
     async summary(ano?: number) {
       const { listings, executions: allExecutions, destinations = [] } =

@@ -1,4 +1,5 @@
 import type { RequestHandler } from "express";
+import { amendmentOrders } from "../ordering/amendment-order.js";
 
 // Reject ambiguous, repeated and malformed query parameters before querying.
 export const validateQuery: RequestHandler = (req, res, next) => {
@@ -17,6 +18,11 @@ export const validateQuery: RequestHandler = (req, res, next) => {
       res.status(400).json({ error: "parametro_invalido", parametro: name });
       return;
     }
+  }
+  const order = req.query.ordem;
+  if (order !== undefined && !amendmentOrders.includes(order as (typeof amendmentOrders)[number])) {
+    res.status(400).json({ error: "parametro_invalido", parametro: "ordem", valores: amendmentOrders });
+    return;
   }
   next();
 };

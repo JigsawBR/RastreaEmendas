@@ -109,6 +109,7 @@ export type StateFilters = {
   funcao?: string;
   orgao?: string;
   municipio?: string;
+  ordem?: string;
   limit?: number;
   offset?: number;
 };
@@ -136,5 +137,6 @@ export const stateApi = {
       funcao: params.funcao,
       orgao: params.orgao,
       municipio: params.municipio,
+      ordem: params.ordem,
     }),
 };

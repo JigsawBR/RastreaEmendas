@@ -19,6 +19,7 @@ export type SearchParams = {
   parlamentar?: string;
   funcao?: string;
   orgao?: string;
+  ordem?: string;
   limit?: number;
   offset?: number;
 };

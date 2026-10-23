@@ -225,7 +225,7 @@ export default function StateAmendmentDetail() {
                           "Não informado"
                         )}
                       </td>
-                      <td>
+                      <td className="amount">
                         {formatBRL(d.valorEmpenhadoLiquido)}
                         <small>
                           {d.notas} {d.notas === 1 ? "nota" : "notas"}
@@ -267,8 +267,10 @@ export default function StateAmendmentDetail() {
               <strong>{amount(phase.value)}</strong>
               <p>{phase.description}</p>
               <small>
-                {e.totalLinhasExecucao - phase.missing} linhas com valor
-                informado
+                {e.totalLinhasExecucao - phase.missing}{" "}
+                {e.totalLinhasExecucao - phase.missing === 1
+                  ? "linha com valor informado"
+                  : "linhas com valor informado"}
                 {phase.missing > 0 &&
                   " · " + phase.missing + " sem valor · soma parcial"}
               </small>
@@ -303,9 +305,9 @@ export default function StateAmendmentDetail() {
                         <small>{row.subfuncao ?? ""}</small>
                         <small>{row.acao ?? row.programa ?? ""}</small>
                       </td>
-                      <td>{amount(row.valorEmpenhado)}</td>
-                      <td>{amount(row.valorLiquidado)}</td>
-                      <td>{amount(row.valorPago)}</td>
+                      <td className="amount">{amount(row.valorEmpenhado)}</td>
+                      <td className="amount">{amount(row.valorLiquidado)}</td>
+                      <td className="amount">{amount(row.valorPago)}</td>
                     </tr>
                   ))}
                 </tbody>

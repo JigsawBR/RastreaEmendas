@@ -7,10 +7,13 @@ test("evidências distinguem vínculo, candidato, declaração e escopo consulta
   const panel = page.locator(".evidence-panel");
   await expect(panel.getByText("Instituto E2E Convenente", { exact: true })).toBeVisible();
   await expect(panel.getByText("Vínculo confirmado", { exact: true })).toBeVisible();
+  // Candidates are collapsed below the confirmed links until requested.
+  await expect(panel.getByText("Candidato", { exact: true })).toBeHidden();
+  await panel.getByText(/Ver 1 vínculo candidato/).click();
   await expect(panel.getByText("Candidato", { exact: true })).toBeVisible();
   await expect(panel.locator('a[href^="javascript:"]')).toHaveCount(0);
   await panel.getByLabel("Tipo de evidência").selectOption("agreement");
-  await expect(panel.getByText("1 evidências exibidas")).toBeVisible();
+  await expect(panel.getByText(/^1 evidência exibida/)).toBeVisible();
   await expect(panel.getByText("Entidade E2E citada no objeto", { exact: true })).toHaveCount(0);
   await panel.getByText("Cobertura das fontes consultadas", { exact: true }).click();
   await expect(panel.getByText(/Convênios 2024; referência explícita/)).toBeVisible();
@@ -110,7 +113,7 @@ test("cadeia federal apresenta documentos e completude real", async ({
 }) => {
   await page.goto("/emendas/202499900001");
   await expect(
-    page.getByRole("heading", { name: "Emenda 0001", exact: true }),
+    page.getByRole("heading", { name: /^Emenda 0001 · / }),
   ).toBeVisible();
   await expect(page.getByText(/100.*5 de 5 critérios presentes/)).toBeVisible();
   await page.getByRole("button", { name: /Empenho/ }).click();
@@ -215,10 +218,22 @@ test("consulta federal reutiliza filtros no CSV e no detalhe", async ({
     .first()
     .click();
   await expect(
-    page.getByRole("heading", { name: "Emenda 0001", exact: true }),
+    page.getByRole("heading", { name: /^Emenda 0001 · / }),
   ).toBeVisible();
   await page.getByRole("link", { name: /Voltar à consulta filtrada/ }).click();
   await expect(page.getByLabel("Município", { exact: true })).toHaveValue(
     "CAJAZEIRAS",
   );
+});
+
+test("ordenação por completude volta à primeira página e ordena o RF-08", async ({ page }) => {
+  await page.goto("/emendas?origem=federal&ano=2024&pagina=2");
+  await page.getByLabel("Ordenar por").selectOption("rastreabilidade");
+  await expect(page).toHaveURL(/ordem=rastreabilidade/);
+  await expect(page).not.toHaveURL(/pagina=/);
+  await expect(page.getByText(/^Página 1 de/)).toBeVisible();
+  const scores = await page.locator(".desktop-results tbody tr").evaluateAll(rows =>
+    rows.map(row => Number(/(\d)\/5/.exec(row.textContent ?? "")?.[1])));
+  expect(scores.length).toBeGreaterThan(1);
+  expect(scores).toEqual([...scores].sort((a, b) => a - b));
 });

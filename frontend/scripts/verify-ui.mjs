@@ -30,6 +30,7 @@ const item = {
   valorEmpenhado: 1000000,
   valorLiquidado: 750000,
   valorPago: 600000,
+  rastreabilidade: { atendidos: 4, total: 5 },
 };
 async function render(module, url, populate) {
   const client = new QueryClient({
@@ -68,7 +69,7 @@ try {
     c.setQueryData(["resumo", "federal", 2024], summary),
   );
   assert.match(home, /Do compromisso ao pagamento/);
-  assert.match(home, /60.0%/);
+  assert.match(home, /60,0%/, "percentual no formato brasileiro");
   assert.ok(home.includes("/emendas?ano=2024"));
   const zero = await render("/src/pages/Home.tsx", "/?ano=2024", (c) =>
     c.setQueryData(["resumo", "federal", 2024], {
@@ -110,6 +111,23 @@ try {
   assert.match(list, /João Pessoa/);
   assert.match(list, /Página 2 de 3/);
   assert.match(list, /Exportar CSV/);
+  assert.match(list, /COMPLETUDE/);
+  assert.match(list, /4\/5/, "selo do RF-08 na lista");
+  assert.match(list, /Ordenar por/);
+  assert.ok(list.includes("001 / 2024"));
+  const sorted = await render(
+    "/src/pages/EmendasList.tsx",
+    "/emendas?ano=2024&ordem=rastreabilidade",
+    (c) => {
+      c.setQueryData(
+        ["emendas", "federal", { ano: 2024, ordem: "rastreabilidade", limit: 20, offset: 0 }],
+        { items: [item], total: 1, limit: 20, offset: 0 },
+      );
+      c.setQueryData(["resumo", "federal", 2024], summary);
+    },
+  );
+  assert.ok(sorted.includes('<option value="rastreabilidade" selected="">'), "ordem vem da URL");
+  assert.match(sorted, /1 emendas encontradas/, "a consulta foi feita com a ordem da URL");
   const detail = await render(
     "/src/features/federal-amendments/pages/AmendmentDetail.tsx",
     {
@@ -161,6 +179,28 @@ try {
   assert.match(detail, /soma parcial/);
   assert.match(detail, /Órgão executor/);
   assert.ok(detail.includes("municipio=Jo%C3%A3o+Pessoa"));
+  assert.match(detail, /Emenda 001 · Parlamentar de teste/, "título identifica o autor");
+  assert.ok(!detail.includes("Por que os valores pagos diferem"), "sem valor nos documentos não há comparação");
+  const gap = await render(
+    "/src/features/federal-amendments/pages/AmendmentDetail.tsx",
+    "/emendas/20240001",
+    (c) => {
+      c.setQueryData(["emenda", "20240001"], { ...item, alocacoes: [], valorRestoInscrito: 0 });
+      c.setQueryData(["cadeia", "20240001"], {
+        totalDocumentos: 1,
+        estagios: ["Empenho", "Liquidação", "Pagamento"].map((estagio) => ({
+          estagio,
+          quantidade: estagio === "Pagamento" ? 1 : 0,
+          documentos: estagio === "Pagamento"
+            ? [{ codigoDocumento: "1", valorDocumento: 900000, data: null, orgaoExecutor: null, nomeOrgaoExecutor: null, nomeFavorecido: null }]
+            : [],
+        })),
+      });
+    },
+  );
+  assert.match(gap, /Por que os valores pagos diferem/);
+  assert.match(gap, /R\$\s600\.000,00 pagos/);
+  assert.match(gap, /somam R\$\s900\.000,00/);
   const sources = await render(
     "/src/pages/DataSources.tsx",
     "/sobre-os-dados",
@@ -197,7 +237,9 @@ try {
   assert.ok(!stateHome.includes("Explorar o destino dos pagamentos"));
   const stateItem = {
     ...item,
+    numeroEmenda: "0001/2024",
     localidades: [],
+    rastreabilidade: { atendidos: null, total: 5 },
     beneficiarioFinal: "Hospital de teste",
     secretaria: "Saúde",
     objeto: "Objeto",
@@ -232,8 +274,11 @@ try {
   assert.match(stateList, /DESTINO/);
   assert.match(stateList, /Município beneficiado/);
   assert.match(stateList, /Hospital de teste/, "sem transferência a município, mostra o beneficiário");
+  assert.match(stateList, /Não avaliável/, "RF-08 estadual sem documentos importados");
+  assert.match(stateList, /Emenda 0001\/2024</, "número estadual não repete o ano");
+  assert.ok(!stateList.includes("0001/2024 / 2024"));
   assert.match(stateList, /Não informado/);
-  assert.ok(stateList.includes("/emendas-estaduais/2024/001"));
+  assert.ok(stateList.includes("/emendas-estaduais/2024/0001%2F2024"));
   assert.ok(stateList.includes("/api/estaduais/export/emendas"));
   assert.ok(!stateList.includes("Nome da localidade"));
   const stateDetail = await render(

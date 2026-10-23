@@ -67,6 +67,8 @@ export interface StateAmendmentRepository {
     listings: StateListing[];
     executions: StateExecution[];
     destinations?: StateDestination[];
+    documents?: StateDocument[];
+    imports?: (StateImport & { year: number })[];
   }>;
   summary(
     year?: number,

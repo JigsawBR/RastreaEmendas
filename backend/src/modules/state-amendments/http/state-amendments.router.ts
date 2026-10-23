@@ -4,6 +4,7 @@ import type { StateAmendmentService } from "../application/state-amendment-servi
 import type { StateFilters } from "../domain/state-amendment.js";
 import { stateAmendmentsCsv } from "../infrastructure/state-amendment-csv.js";
 import { findMunicipalityCode } from "../../../shared/territory/municipalities.js";
+import { parseAmendmentOrder } from "../../../shared/ordering/amendment-order.js";
 const SOURCE = {
   origem: "estadual",
   fonte: "CODATA — Dados Abertos da Paraíba",
@@ -35,11 +36,13 @@ export function createStateAmendmentsRouter(service: StateAmendmentService) {
   router.get("/emendas", async (req, res) => {
     const limit = Math.min(Number(req.query.limit ?? 50), 200);
     const offset = Number(req.query.offset ?? 0);
+    const ordem = parseAmendmentOrder(req.query.ordem);
     res.json({
       ...SOURCE,
-      ...(await service.list(filters(req), { limit, offset })),
+      ...(await service.list(filters(req), { limit, offset }, ordem)),
       limit,
       offset,
+      ordem,
     });
   });
   router.get("/resumo", async (req, res) =>
@@ -51,7 +54,7 @@ export function createStateAmendmentsRouter(service: StateAmendmentService) {
     }),
   );
   router.get("/export/emendas", async (req, res) => {
-    const result = await service.list(filters(req));
+    const result = await service.list(filters(req), undefined, parseAmendmentOrder(req.query.ordem));
     res.setHeader("Content-Type", "text/csv; charset=utf-8");
     res.setHeader(
       "Content-Disposition",

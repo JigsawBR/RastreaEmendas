@@ -2,6 +2,8 @@ import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAmendmentSearch } from "../shared/hooks/useAmendmentSearch";
 import { loadGeography } from "../features/territory/api";
+import { amendmentOrders } from "../shared/lib/amendment-order";
+import type { AmendmentOrder } from "../shared/lib/amendment-order";
 import { sourceLabel } from "../shared/lib/sources";
 import { formatInt } from "../shared/lib/format";
 import { Badge, PageHeading, QueryState } from "../shared/components/DesignSystem";
@@ -20,7 +22,9 @@ export default function EmendasList() {
     backTo,
     exportUrl,
     totalPages,
+    order,
     apply,
+    changeOrder,
     changeSource,
     goToPage,
     clear,
@@ -120,11 +124,28 @@ export default function EmendasList() {
               {activeLabels || "Todos os exercícios · sem filtros adicionais"}
             </p>
           </div>
-          {data && data.total > 0 && (
-            <a className="button secondary" href={exportUrl}>
-              Exportar CSV
-            </a>
-          )}
+          <div className="results-actions">
+            <label className="field inline-field">
+              Ordenar por
+              <select
+                value={order}
+                onChange={(event) =>
+                  changeOrder(event.target.value as AmendmentOrder)
+                }
+              >
+                {amendmentOrders.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            {data && data.total > 0 && (
+              <a className="button secondary" href={exportUrl}>
+                Exportar CSV
+              </a>
+            )}
+          </div>
         </div>
         <QueryState
           loading={query.isLoading}

@@ -29,8 +29,8 @@ function destinationStep(listing: StateListing, destinations: StateDestination[]
   };
 }
 
-export function buildStateTrail(listing: StateListing, rows: StateExecution[], documents: StateDocument[] = [], imports: StateImport[] = [], destinations: StateDestination[] = []) {
-  const mapped = documents.map((document) => {
+function mapDocuments(documents: StateDocument[]) {
+  return documents.map((document) => {
     const p = document.payload && typeof document.payload === "object" ? document.payload as Record<string, unknown> : {};
     const type = text(p, "descricaoTipo") ?? text(p, "tipoLiquidacao") ?? text(p, "tipoPagamento");
     return {
@@ -53,9 +53,11 @@ export function buildStateTrail(listing: StateListing, rows: StateExecution[], d
         || (document.kind === "liquidation" && (numeric(p, "valorEmpenhado") ?? 0) < 0),
     };
   });
+}
+
+function criteriaFor(rows: StateExecution[], mapped: ReturnType<typeof mapDocuments>) {
   const confirmed = mapped.filter(d => d.vinculo === "confirmed");
   const positive = confirmed.filter(d => !d.anulado && d.valor !== null && d.valor > (d.valorAnulado ?? 0));
-  const sources = unique([...rows.map(r => r.fonte_recurso), ...confirmed.map(d => d.fonteRecurso)]);
   const organs = unique([...rows.map(r => r.nome_orgao), ...confirmed.map(d => d.orgao)]);
   const criteria = [
     { codigo: "commitment", rotulo: "Documento de empenho", presente: positive.some(d => d.fase === "commitment") },
@@ -64,6 +66,19 @@ export function buildStateTrail(listing: StateListing, rows: StateExecution[], d
     { codigo: "function", rotulo: "Função identificada", presente: confirmed.some(d => Boolean(d.funcao)) || rows.some(r => Boolean(r.funcao)) },
     { codigo: "organization", rotulo: "Órgão executor identificado", presente: organs.length > 0 },
   ];
+  return { confirmed, positive, organs, criteria };
+}
+
+/** RF-08 summary for listings; same criteria as the detail. Not assessable without imported documents. */
+export function stateTraceability(rows: StateExecution[], documents: StateDocument[] = [], imports: StateImport[] = []) {
+  const { criteria } = criteriaFor(rows, mapDocuments(documents));
+  return { atendidos: imports.length ? criteria.filter(c => c.presente).length : null, total: criteria.length };
+}
+
+export function buildStateTrail(listing: StateListing, rows: StateExecution[], documents: StateDocument[] = [], imports: StateImport[] = [], destinations: StateDestination[] = []) {
+  const mapped = mapDocuments(documents);
+  const { confirmed, positive, organs, criteria } = criteriaFor(rows, mapped);
+  const sources = unique([...rows.map(r => r.fonte_recurso), ...confirmed.map(d => d.fonteRecurso)]);
   const scopes = ["commitment", "liquidation", "payment"].map(kind => ({
     fase: kind, meses: [...new Set(imports.filter(i => i.kind === kind).map(i => i.month))].sort((a, b) => a - b),
   }));

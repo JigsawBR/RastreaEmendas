@@ -10,5 +10,7 @@ export type EmendaListItem = {
   valorEmpenhado: number;
   valorLiquidado: number;
   valorPago: number;
+  /** RF-08 criteria met; null when the documents were not imported (state only). */
+  rastreabilidade: { atendidos: number | null; total: number };
 };
 

@@ -12,16 +12,22 @@ import {
 export function createPrismaStateAmendmentRepository(
   database: Pick<PrismaClient, "emenda_estadual" | "emenda_estadual_execucao" | "state_expense_document" | "state_expense_import" | "state_amendment_destination">,
 ): StateAmendmentRepository {
-  // Listings keep the source spelling ("0799/2024"); destinations use the
-  // normalized number of the documentary ETL ("799").
-  async function destinationsFor(listings: Pick<StateListing, "ano" | "numero_emenda">[]) {
-    const keys = listings.flatMap((row) => {
-      const number = normalizedAmendmentNumber(row.ano, row.numero_emenda);
-      return number ? [{ year: row.ano, amendment_number: number }] : [];
-    });
-    return keys.length
-      ? database.state_amendment_destination.findMany({ where: { OR: keys } })
-      : [];
+  // Listings keep the source spelling ("0799/2024"); destinations and
+  // documents use the normalized number of the documentary ETL ("799").
+  // Fetched by year and filtered here: a sorted listing needs every match,
+  // and an OR with thousands of keys would not scale.
+  async function linkedRecords(listings: Pick<StateListing, "ano" | "numero_emenda">[]) {
+    const keys = new Set(listings.map((row) => destinationKey(row.ano, row.numero_emenda)));
+    const years = [...new Set(listings.map((row) => row.ano))];
+    if (!years.length) return { destinations: [], documents: [], imports: [] };
+    const [destinations, documents, imports] = await Promise.all([
+      database.state_amendment_destination.findMany({ where: { year: { in: years } } }),
+      database.state_expense_document.findMany({ where: { year: { in: years } } }),
+      database.state_expense_import.findMany({ where: { year: { in: years } } }),
+    ]);
+    const linked = <T extends { year: number; amendment_number: string }>(rows: T[]) =>
+      rows.filter((row) => keys.has(`${row.year}:${row.amendment_number}`));
+    return { destinations: linked(destinations), documents: linked(documents), imports };
   }
   async function listingsInMunicipality(code: string, year?: number) {
     const located = await database.state_amendment_destination.findMany({
@@ -131,7 +137,7 @@ export function createPrismaStateAmendmentRepository(
           orderBy: [{ nome_orgao: "asc" }, { funcao: "asc" }, { id: "asc" }],
         })
       : [];
-    return { total, listings, executions, destinations: await destinationsFor(listings) };
+    return { total, listings, executions, ...(await linkedRecords(listings)) };
   }
   return {
     list,

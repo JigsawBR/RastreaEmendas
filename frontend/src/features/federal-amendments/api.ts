@@ -135,10 +135,11 @@ export const api = {
   destinoEmenda: (codigo: string) => get<DestinoResponse>(`/emendas/${codigo}/destino`),
   emendas: (params: {
     ano?: number; parlamentar?: string; municipio?: string; funcao?: string; orgao?: string;
-    limit?: number; offset?: number;
+    ordem?: string; limit?: number; offset?: number;
   }) => {
     const qs = new URLSearchParams();
     if (params.ano) qs.set("ano", String(params.ano));
+    if (params.ordem) qs.set("ordem", params.ordem);
     if (params.parlamentar) qs.set("parlamentar", params.parlamentar);
     if (params.municipio) qs.set("municipio", params.municipio);
     if (params.funcao) qs.set("funcao", params.funcao);

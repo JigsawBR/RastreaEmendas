@@ -65,14 +65,27 @@ export default function EmendaDetail() {
     );
   const e = detail.data;
   const stage = chain.data?.estagios.find((s) => s.estagio === selected);
+  // The cards come from the CGU allocation of the year; the phases below sum
+  // documents of any date. Payments of later years (restos a pagar) make them
+  // differ, which reads as an error unless it is said explicitly.
+  const paymentDocs = chain.data?.estagios
+    .find((s) => s.estagio === "Pagamento")
+    ?.documentos.filter((d) => d.valorDocumento !== null);
+  const paidInDocuments = paymentDocs?.reduce((sum, d) => sum + (d.valorDocumento ?? 0), 0);
+  const paymentGap =
+    paidInDocuments !== undefined && paymentDocs!.length > 0 &&
+    Math.abs(paidInDocuments - e.valorPago) >= 1;
   return (
     <div className="page-stack">
       <PageHeading
-        title={"Emenda " + (e.numeroEmenda ?? e.codigoEmenda)}
+        title={
+          "Emenda " + (e.numeroEmenda ?? e.codigoEmenda) +
+          (e.nomeAutor ? " · " + e.nomeAutor : "")
+        }
         description={
           <>
-            {e.nomeAutor ?? "Parlamentar não informado"} /{" "}
-            {e.tipoEmenda ?? "Modalidade não informada"} / Exercício {e.ano}
+            {e.tipoEmenda ?? "Modalidade não informada"} / Exercício {e.ano} /
+            Código {e.codigoEmenda}
           </>
         }
       />
@@ -81,19 +94,19 @@ export default function EmendaDetail() {
         <Metric
           label="Empenhado"
           value={formatBRLCompact(e.valorEmpenhado)}
-          context="Compromisso registrado"
+          context={"Alocação de " + e.ano}
         />
         <Metric
           label="Liquidado"
           value={formatBRLCompact(e.valorLiquidado)}
-          context="Despesa verificada"
+          context={"Alocação de " + e.ano}
         />
         <Metric
           label="Pago"
           value={formatBRLCompact(e.valorPago)}
           context={
             e.valorEmpenhado > 0
-              ? formatPct(e.valorPago / e.valorEmpenhado) + " do empenhado"
+              ? formatPct(e.valorPago / e.valorEmpenhado) + " do empenhado · alocação de " + e.ano
               : "Relação não calculável: empenhado zero"
           }
         />
@@ -104,15 +117,25 @@ export default function EmendaDetail() {
         />
       </div>
       <div className="notice">
-        A diferença não equivale a saldo disponível ou dívida comprovada.
-        Pagamentos podem incluir restos de exercícios anteriores.
+        {paymentGap ? (
+          <>
+            <strong>Por que os valores pagos diferem?</strong> Os cartões acima
+            mostram o que a CGU registra na alocação de {e.ano}:{" "}
+            {formatBRL(e.valorPago)} pagos. Os documentos de pagamento abaixo
+            somam {formatBRL(paidInDocuments!)}: eles reúnem pagamentos de
+            qualquer data e podem incluir os feitos em anos seguintes, como
+            restos a pagar.{" "}
+          </>
+        ) : null}
+        A diferença entre empenhado e pago não equivale a saldo disponível ou
+        dívida comprovada.
         {e.valorPago > e.valorEmpenhado &&
-          " O pago supera o empenhado neste recorte."}
+          " O pago supera o empenhado neste recorte, o que ocorre quando há pagamento de restos de exercícios anteriores."}
       </div>
       <section className="panel">
         <h2>Como o recurso avançou</h2>
         <p className="muted small">
-          Documentos associados à emenda, organizados por fase. A presença das
+          Soma dos documentos de cada fase, de qualquer data. A presença das
           fases não comprova conciliação individual.
         </p>
         <QueryState
@@ -155,7 +178,7 @@ export default function EmendaDetail() {
                 <p>{descriptions[i]}</p>
                 <small>
                   {s
-                    ? s.quantidade + " documentos"
+                    ? s.quantidade + (s.quantidade === 1 ? " documento" : " documentos")
                     : chain.isError
                       ? "Consulta indisponível"
                       : "Consulta em andamento"}
@@ -198,7 +221,7 @@ export default function EmendaDetail() {
                           <small>UG {d.orgaoExecutor ?? "não informada"}</small>
                         </td>
                         <td>{d.nomeFavorecido ?? "Não informado"}</td>
-                        <td>
+                        <td className="amount">
                           {d.valorDocumento === null
                             ? "Não informado"
                             : formatBRL(d.valorDocumento)}

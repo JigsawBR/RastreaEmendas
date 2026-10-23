@@ -214,6 +214,17 @@ test("API estadual filtra, pagina, exporta e distingue a identidade por exercíc
       100,
       "totais limitados à execução correspondente aos filtros",
     );
+    assert.deepEqual(
+      combined.items[0].rastreabilidade,
+      { atendidos: null, total: 5 },
+      "sem documentos importados o RF-08 não é avaliável",
+    );
+    const byCommitment = await json("/estaduais/emendas?ano=2024&ordem=empenhado&limit=1");
+    assert.equal(byCommitment.total, 2);
+    assert.equal(byCommitment.ordem, "empenhado");
+    assert.equal(byCommitment.items[0].numeroEmenda, "002", "ordena antes de paginar");
+    const second = await json("/estaduais/emendas?ano=2024&ordem=empenhado&limit=1&offset=1");
+    assert.equal(second.items[0].numeroEmenda, "001", "sem execução vai para o fim");
     const noMatch = await json("/estaduais/emendas?funcao=Inexistente");
     assert.equal(noMatch.total, 0);
     const sameRow = await json(
@@ -289,6 +300,7 @@ test("API estadual filtra, pagina, exporta e distingue a identidade por exercíc
       "beneficiario=a&beneficiario=b",
       "municipio=Inexistente",
       "municipio=",
+      "ordem=maior",
     ])
       assert.equal(
         (await get("/estaduais/emendas?" + query)).status,

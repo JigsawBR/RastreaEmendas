@@ -19,7 +19,11 @@ export function formatBRLCompact(v: number | null | undefined): string {
 
 export function formatPct(v: number | null | undefined): string {
   if (v === null || v === undefined) return "—";
-  return `${(v * 100).toFixed(1)}%`;
+  return new Intl.NumberFormat("pt-BR", {
+    style: "percent",
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 1,
+  }).format(v);
 }
 
 export function formatInt(v: number | null | undefined): string {
