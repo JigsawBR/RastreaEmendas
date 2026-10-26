@@ -111,6 +111,10 @@ export function createStateAmendmentService(
           ? listings.reduce((sum, row) => sum + Number(row.valor ?? 0), 0)
           : null,
         ...totals,
+        // Same shape as the federal summary; missing values stay null.
+        porFuncao: groupStateValues(executions, "function")
+          .map((group) => ({ funcao: group.rotulo, empenhado: group.valorEmpenhado, pago: group.valorPago }))
+          .sort((a, b) => (b.empenhado ?? -1) - (a.empenhado ?? -1)),
         destinos: summarizeDestinations(
           destinations.filter((row) => listed.has(`${row.year}:${row.amendment_number}`)),
         ),

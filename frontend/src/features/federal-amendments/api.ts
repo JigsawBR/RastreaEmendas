@@ -12,7 +12,10 @@ export type Resumo = {
   valorPago: number;
   valorRestoInscrito: number;
   taxaExecucao: number;
+  porFuncao: FunctionTotal[];
 };
+/** Summary by budget function; the state source may lack values (null). */
+export type FunctionTotal = { funcao: string; empenhado: number | null; pago: number | null };
 
 export type EmendasListResponse = {
   total: number;
@@ -34,6 +37,8 @@ export type EmendaDetail = {
   valorRestoInscrito: number;
   alocacoes: {
     localidadeGasto: string;
+    /** Set only when the locality is a Paraíba municipality ("CITY - PB"). */
+    codigoIbge: string | null;
     funcao: string;
     subfuncao: string;
     valorEmpenhado: number;
@@ -125,7 +130,8 @@ export type DestinoResponse = {
     documentos: number;
     missingValueCount: number;
     valor: number;
-    favorecidos: { nome: string; municipio: string | null; valor: number }[];
+    /** codigoIbge only for favorecidos in Paraíba. */
+    favorecidos: { nome: string; municipio: string | null; uf: string | null; codigoIbge: string | null; valor: number }[];
   }[];
 };
 

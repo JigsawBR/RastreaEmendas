@@ -4,6 +4,7 @@ import {
   useLocation,
   useSearchParams,
 } from "react-router-dom";
+import { Icon } from "./shared/components/Icon";
 
 export default function App() {
   const location = useLocation();
@@ -25,6 +26,9 @@ export default function App() {
       <header className="site-header">
         <div className="header-inner">
           <NavLink to={"/" + scope} className="brand">
+            <span className="brand-mark">
+              <Icon name="route" size={20} />
+            </span>
             RastreaEmendas
           </NavLink>
           <nav aria-label="Navegação principal">

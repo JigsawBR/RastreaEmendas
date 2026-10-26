@@ -2,6 +2,7 @@ import { Router } from "express";
 import { prisma } from "../../../../shared/infrastructure/database/prisma.js";
 import { parseAmendmentOrder } from "../../../../shared/ordering/amendment-order.js";
 import { listAmendments } from "../application/list-amendments.js";
+import { findMunicipalityCode } from "../../../../shared/territory/municipalities.js";
 
 export const amendmentsRouter = Router();
 
@@ -55,6 +56,10 @@ amendmentsRouter.get("/:codigo", async (req, res) => {
     valorRestoInscrito: restoInscrito,
     alocacoes: emenda.emenda_alocacao.map((alocacao) => ({
       localidadeGasto: alocacao.localidade_gasto,
+      // Only "CITY - PB" is a municipality; "PARAÍBA (UF)" and "Nacional" are not.
+      codigoIbge: / - PB$/.test(alocacao.localidade_gasto)
+        ? findMunicipalityCode(alocacao.localidade_gasto) ?? null
+        : null,
       funcao: alocacao.funcao,
       subfuncao: alocacao.subfuncao,
       valorEmpenhado: Number(alocacao.valor_empenhado ?? 0),

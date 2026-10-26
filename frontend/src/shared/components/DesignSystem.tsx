@@ -1,5 +1,19 @@
 import type { ReactNode } from "react";
 import { formatBRL } from "../lib/format";
+import { isOngoing } from "../lib/years";
+import { Icon } from "./Icon";
+import type { IconName } from "./Icon";
+
+export function OngoingYearNotice({ year }: { year: number | null | undefined }) {
+  if (!isOngoing(year)) return null;
+  return (
+    <p className="notice notice-partial">
+      <strong>Exercício {year} em andamento.</strong> Os valores vão até a
+      última carga dos dados e ainda devem crescer até o fim do ano; compare
+      com exercícios fechados com cautela.
+    </p>
+  );
+}
 
 export function Badge({
   children,
@@ -14,36 +28,61 @@ export function Badge({
     </span>
   );
 }
+/** Hero band shared by every screen; `actions` holds the scope controls (year, origin). */
 export function PageHeading({
   title,
   description,
   scope = "FEDERAL · PARAÍBA · DADOS ABERTOS",
+  actions,
 }: {
   title: string;
   description: ReactNode;
   scope?: string;
+  actions?: ReactNode;
 }) {
   return (
-    <div className="page-heading">
-      <Badge>{scope}</Badge>
-      <h1>{title}</h1>
-      <p>{description}</p>
-    </div>
+    <section className="dashboard-hero page-heading">
+      <div>
+        <span className="eyebrow-light">{scope}</span>
+        <h1>{title}</h1>
+        <p>{description}</p>
+      </div>
+      {actions && <div className="hero-controls">{actions}</div>}
+    </section>
   );
 }
+/** Relative change vs a named period; amounts are neither good nor bad, so it stays neutral ink. */
+function Delta({ change, period }: { change: number; period: string }) {
+  const direction = change > 0.0005 ? "▲" : change < -0.0005 ? "▼" : "■";
+  const text = new Intl.NumberFormat("pt-BR", { style: "percent", maximumFractionDigits: 0, signDisplay: "exceptZero" }).format(change);
+  return (
+    <span className="metric-delta">
+      <span aria-hidden="true">{direction}</span> {text} vs {period}
+    </span>
+  );
+}
+
 export function Metric({
   label,
   value,
   context,
+  icon,
+  delta,
 }: {
   label: string;
   value: string;
   context: string;
+  icon?: IconName;
+  delta?: { change: number; period: string } | null;
 }) {
   return (
     <div className="panel metric">
-      <span>{label}</span>
+      <span className="metric-label">
+        {icon && <span className="metric-icon"><Icon name={icon} /></span>}
+        {label}
+      </span>
       <strong>{value}</strong>
+      {delta && <Delta change={delta.change} period={delta.period} />}
       <small>{context}</small>
     </div>
   );

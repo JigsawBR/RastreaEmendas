@@ -3,6 +3,8 @@ import { Link, useLocation, useParams } from "react-router-dom";
 import { stateApi } from "../api";
 import type { StateDistribution } from "../api";
 import { StateTrail } from "../components/StateTrail";
+import PlacesMap from "../../territory/PlacesMap";
+import type { Place } from "../../territory/PlacesMap";
 import { EvidencePanel } from "../../../shared/components/EvidencePanel";
 import { formatBRL, formatBRLCompact, formatDate } from "../../../shared/lib/format";
 import {
@@ -120,7 +122,7 @@ export default function StateAmendmentDetail() {
       <Link to={backTo}>← Voltar à consulta filtrada</Link>
       <div className="metrics">
         <Metric
-          label="Empenhado"
+          icon="committed" label="Empenhado"
           value={compact(e.valorEmpenhado)}
           context={
             e.valoresAusentes.empenhado
@@ -129,7 +131,7 @@ export default function StateAmendmentDetail() {
           }
         />
         <Metric
-          label="Liquidado"
+          icon="liquidated" label="Liquidado"
           value={compact(e.valorLiquidado)}
           context={
             e.valoresAusentes.liquidado
@@ -138,7 +140,7 @@ export default function StateAmendmentDetail() {
           }
         />
         <Metric
-          label="Pago"
+          icon="paid" label="Pago"
           value={compact(e.valorPago)}
           context={
             e.valoresAusentes.pago
@@ -147,7 +149,7 @@ export default function StateAmendmentDetail() {
           }
         />
         <Metric
-          label="Diferença"
+          icon="difference" label="Diferença"
           value={difference === null ? "Não calculável" : compact(difference)}
           context={
             comparable ? "Empenhado − pago" : "Valores ausentes ou parciais"
@@ -182,68 +184,24 @@ export default function StateAmendmentDetail() {
           {e.dataEnvio ? formatDate(e.dataEnvio) : "Data não informada"}. O
           beneficiário não é automaticamente identificado como município.
         </p>
-        {e.destinos.length > 0 && (
-          <div className="documents">
-            <h3>Para quem o empenho foi feito</h3>
-            <div className="table-scroll">
-              <table className="data-table">
-                <thead>
-                  <tr>
-                    <th>Credor</th>
-                    <th>Modalidade de aplicação</th>
-                    <th>Município</th>
-                    <th>Empenho líquido</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {e.destinos.map((d, i) => (
-                    <tr key={i}>
-                      <td>
-                        {d.credor ?? "Não informado"}
-                        <small>{d.documentoCredor ?? ""}</small>
-                      </td>
-                      <td>
-                        {d.destinoRotulo}
-                        <small>
-                          {d.modalidadeAplicacao
-                            ? "Modalidade " + d.modalidadeAplicacao
-                            : ""}
-                        </small>
-                      </td>
-                      <td>
-                        {d.municipioBeneficiado ? (
-                          <>
-                            {d.municipioBeneficiado}
-                            <small>Município beneficiado</small>
-                          </>
-                        ) : d.municipioCredor ? (
-                          <>
-                            {d.municipioCredor}
-                            <small>Sede do credor, não município beneficiado</small>
-                          </>
-                        ) : (
-                          "Não informado"
-                        )}
-                      </td>
-                      <td className="amount">
-                        {formatBRL(d.valorEmpenhadoLiquido)}
-                        <small>
-                          {d.notas} {d.notas === 1 ? "nota" : "notas"}
-                        </small>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            <p className="muted small">
-              A modalidade de aplicação da nota de empenho indica quem recebe o
-              recurso. Só a transferência ao município identifica a cidade
-              beneficiada; para entidades privadas, o município registrado é a
-              sede. Valores somam principal, reforços e anulações.
-            </p>
-          </div>
-        )}
+      </section>
+      <section className="panel">
+        <h2>Onde está o recurso</h2>
+        <p className="panel-subtitle">Municípios dos credores das notas de empenho desta emenda</p>
+        <PlacesMap
+          year={e.ano}
+          places={e.destinos.flatMap((d): Place[] => {
+            const code = d.codigoIbge ?? d.codigoIbgeCredor;
+            if (!code) return [];
+            const basis = d.destinoRotulo + (d.modalidadeAplicacao ? " · modalidade " + d.modalidadeAplicacao : "")
+              + ` · ${d.notas} ${d.notas === 1 ? "nota" : "notas"}`;
+            return [{ code, name: d.municipioBeneficiado ?? d.municipioCredor, role: d.municipioBeneficiado ? "beneficiary" : "seat", who: d.credor ?? "Credor não informado", basis, value: d.valorEmpenhadoLiquido }];
+          })}
+          note={
+            "A modalidade de aplicação da nota de empenho indica quem recebe o recurso. Só a transferência ao município identifica a cidade beneficiada; para entidades privadas, o município registrado é a sede. Valores somam principal, reforços e anulações." +
+            (e.destinos.some((d) => !d.codigoIbge && !d.codigoIbgeCredor) ? " Há credores sem município identificado." : "")
+          }
+        />
       </section>
       <section className="panel">
         <h2>Execução informada pela CODATA</h2>

@@ -1,14 +1,16 @@
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { api } from "../api";
 import { formatBRL, formatInt } from "../../../shared/lib/format";
 import MunicipalityMap from "../../territory/MunicipalityMap";
-import { QueryState } from "../../../shared/components/DesignSystem";
-
-const ANOS = [2026, 2025, 2024, 2023];
+import { OngoingYearNotice, PageHeading, QueryState } from "../../../shared/components/DesignSystem";
+import { YEARS, readYear } from "../../../shared/lib/years";
 
 export default function Municipios() {
-  const [ano, setAno] = useState<number>(2024);
+  // The year lives in the URL so that a map view can be linked and reloaded.
+  const [search, setSearch] = useSearchParams();
+  const ano = readYear(search.get("ano"));
+  const setAno = (year: number) => setSearch({ ano: String(year) }, { replace: true });
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["municipios", ano],
     queryFn: () => api.municipios(ano),
@@ -28,25 +30,22 @@ export default function Municipios() {
   );
 
   return (
-    <div>
-      <div className="flex items-end justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-semibold">Municípios</h1>
-          <p className="muted small">Distribuição territorial das emendas federais e estaduais, conforme os vínculos identificados nas fontes públicas.</p>
-          <p className="text-slate-600 mt-1">
-            223 municípios da Paraíba · exercício {ano}
-          </p>
-        </div>
-        <select
-          aria-label="Exercício dos municípios"
-          value={ano}
-          onChange={(e) => setAno(Number(e.target.value))}
-          className="border border-slate-300 rounded-md px-3 py-2 bg-white text-sm"
-        >
-          {ANOS.map((y) => <option key={y} value={y}>{y}</option>)}
-        </select>
-      </div>
-
+    <div className="page-stack">
+      <PageHeading
+        title="Municípios"
+        scope={`Território · 223 municípios · Exercício ${ano}`}
+        description="Distribuição territorial das emendas federais e estaduais, conforme os vínculos identificados nas fontes públicas."
+        actions={
+          <label className="field">
+            Exercício
+            <select aria-label="Exercício dos municípios" value={ano} onChange={(e) => setAno(Number(e.target.value))}>
+              {YEARS.map((y) => <option key={y} value={y}>{y}</option>)}
+            </select>
+          </label>
+        }
+      />
+      <OngoingYearNotice year={ano} />
+      <div>
       <MunicipalityMap year={ano} />
       <h2 className="municipality-table-title">Detalhamento das fontes federais</h2>
       <QueryState loading={false} error={isError} retry={() => void refetch()} />
@@ -146,6 +145,7 @@ export default function Municipios() {
         cujo beneficiário é sempre explícito. As fontes são complementares e não
         devem ser somadas.
       </p>
+      </div>
     </div>
   );
 }

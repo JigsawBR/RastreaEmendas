@@ -2,8 +2,9 @@ import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { loadGeography, municipalityMapData } from "./api";
-import type { Geography, MunicipalityMapItem } from "./api";
+import type { MunicipalityMapItem } from "./api";
 import { classLabels, classOf, quantileBreaks } from "./scale";
+import { indicators, paths, rampStep } from "./map-model";
 import { QueryState } from "../../shared/components/DesignSystem";
 import { formatBRL, formatBRLCompact, formatInt } from "../../shared/lib/format";
 
@@ -15,51 +16,7 @@ function category(item: MunicipalityMapItem | undefined): Category {
   return federal && state ? "both" : federal ? "federal" : state ? "state" : "none";
 }
 
-// One source per indicator: federal sources are complementary and must not be
-// summed, and a planned value is not execution.
-type Indicator = { label: string; unit: string; ramp: "federal" | "state"; value: (item: MunicipalityMapItem) => number; note: string };
-const indicators: Record<string, Indicator> = {
-  estadual: {
-    label: "Estadual · transferido ao município", unit: "transferidos", ramp: "state",
-    value: (item) => item.estadual.valorTransferido,
-    note: "Empenho líquido das notas de transferência à prefeitura ou a fundo municipal (CODATA). Recursos a entidades sediadas na cidade não entram.",
-  },
-  planos: {
-    label: "Federal · planos especiais (previsto)", unit: "previstos", ramp: "federal",
-    value: (item) => item.federal.valorPlanos,
-    note: "Valor previsto nos planos de ação das transferências especiais (Transferegov). É previsão, não execução.",
-  },
-  alocacoes: {
-    label: "Federal · alocações por município", unit: "empenhados", ramp: "federal",
-    value: (item) => item.federal.empenhado,
-    note: "Empenhado nas alocações da CGU que informam o município. A maior parte do valor federal está registrada como PARAÍBA (UF) e não aparece aqui.",
-  },
-  despesa: {
-    label: "Federal · execução mensal", unit: "empenhados", ramp: "federal",
-    value: (item) => item.federal.despesaEmpenhado,
-    note: "Despesa mensal dos arquivos abertos com autor de emenda, recortada pelo ano do gasto.",
-  },
-};
 const PRESENCE = "presenca";
-const RAMP_STEPS = 5;
-// Fewer classes (repeated values) still span the whole ramp, light to dark.
-const rampStep = (cls: number, classes: number) =>
-  classes <= 1 ? RAMP_STEPS : 1 + Math.round(((cls - 1) * (RAMP_STEPS - 1)) / (classes - 1));
-
-function paths(data: Geography) {
-  const polygons = data.features.map(feature => ({ feature, polygons: feature.geometry.type === "Polygon" ? [feature.geometry.coordinates] : feature.geometry.coordinates }));
-  const positions = polygons.flatMap(shape => shape.polygons.flat(2));
-  const longitude = positions.map(point => point[0]);
-  const latitude = positions.map(point => -point[1]);
-  const left = Math.min(...longitude), top = Math.min(...latitude);
-  const width = Math.max(...longitude) - left, height = Math.max(...latitude) - top;
-  const scale = Math.min(960 / width, 500 / height);
-  const dx = (1000 - width * scale) / 2, dy = (540 - height * scale) / 2;
-  return polygons.map(({ feature, polygons: rings }) => ({
-    code: feature.properties.code, name: feature.properties.name,
-    path: rings.map(polygon => polygon.map(ring => ring.map(([x, y], i) => `${i ? "L" : "M"}${((x - left) * scale + dx).toFixed(2)},${((-y - top) * scale + dy).toFixed(2)}`).join(" ") + " Z").join(" ")).join(" "),
-  }));
-}
 
 export default function MunicipalityMap({ year }: { year: number }) {
   const [mode, setMode] = useState("estadual");
@@ -109,7 +66,7 @@ export default function MunicipalityMap({ year }: { year: number }) {
   function select(code: string) { setSelectedCode(code); setHovered(null); setExpanded(false); }
   return <section className="panel municipality-map-panel" aria-labelledby="municipality-map-title">
     <div className="municipality-map-heading">
-      <div><span className="eyebrow">TERRITÓRIO · EXERCÍCIO {year}</span><h2 id="municipality-map-title">As emendas no mapa da Paraíba</h2><p className="muted">Explore os 223 municípios. Quanto mais escura a cor, maior o valor no indicador escolhido.</p></div>
+      <div><h2 id="municipality-map-title">As emendas no mapa da Paraíba</h2><p className="muted">Explore os 223 municípios. Quanto mais escura a cor, maior o valor no indicador escolhido.</p></div>
       <label className="field">Indicador no mapa<select value={mode} onChange={event => setMode(event.target.value)}>
         {Object.entries(indicators).map(([key, item]) => <option key={key} value={key}>{item.label}</option>)}
         <option value={PRESENCE}>Presença (federal e estadual)</option>

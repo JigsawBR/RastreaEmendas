@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useAmendmentSearch } from "../shared/hooks/useAmendmentSearch";
 import { loadGeography } from "../features/territory/api";
 import { amendmentOrders } from "../shared/lib/amendment-order";
+import { YEARS } from "../shared/lib/years";
 import type { AmendmentOrder } from "../shared/lib/amendment-order";
 import { sourceLabel } from "../shared/lib/sources";
 import { formatInt } from "../shared/lib/format";
@@ -49,10 +50,8 @@ export default function EmendasList() {
         title="Encontre e acompanhe uma emenda."
         scope={sourceLabel(source).toUpperCase() + " · PARAÍBA · DADOS ABERTOS"}
         description="Combine os filtros para explorar os recursos destinados à Paraíba."
+        actions={<SourceSelector value={source} onChange={changeSource} />}
       />
-      <div className="scope-row">
-        <SourceSelector value={source} onChange={changeSource} />
-      </div>
       <details className="panel filters-disclosure" open>
         <summary>Filtros da consulta</summary>
         <form
@@ -71,7 +70,7 @@ export default function EmendasList() {
                 }
               >
                 <option value="">Todos os anos</option>
-                {[2026, 2025, 2024, 2023].map((year) => (
+                {YEARS.map((year) => (
                   <option key={year}>{year}</option>
                 ))}
               </select>

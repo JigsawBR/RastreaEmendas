@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 
 test("mapa municipal distingue origens, permite seleção e atualiza por exercício", async ({ page, request }, testInfo) => {
-  await page.goto("/municipios");
+  await page.goto("/municipios?ano=2024");
   const map = page.getByRole("group", { name: "Mapa dos 223 municípios da Paraíba em 2024" });
   await expect(map.getByRole("button")).toHaveCount(223);
   // Default indicator: state commitment transferred to the city, by intensity.

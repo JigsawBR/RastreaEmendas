@@ -35,6 +35,7 @@ analyticsRouter.get("/", async (req, res) => {
   const parlamentares = new Set<string>();
   const municipios = new Set<string>();
   let empenhado = 0, liquidado = 0, pago = 0, restoInscrito = 0;
+  const porFuncao = new Map<string, { empenhado: number; pago: number }>();
 
   for (const a of alocacoes) {
     emendas.add(a.codigo_emenda);
@@ -44,6 +45,11 @@ analyticsRouter.get("/", async (req, res) => {
     liquidado += Number(a.valor_liquidado ?? 0);
     pago += Number(a.valor_pago ?? 0);
     restoInscrito += Number(a.valor_resto_inscrito ?? 0);
+    const funcao = a.funcao?.trim() || "Não informada";
+    const grupo = porFuncao.get(funcao) ?? { empenhado: 0, pago: 0 };
+    grupo.empenhado += Number(a.valor_empenhado ?? 0);
+    grupo.pago += Number(a.valor_pago ?? 0);
+    porFuncao.set(funcao, grupo);
   }
 
   res.json({
@@ -56,5 +62,8 @@ analyticsRouter.get("/", async (req, res) => {
     valorPago: pago,
     valorRestoInscrito: restoInscrito,
     taxaExecucao: empenhado > 0 ? pago / empenhado : 0,
+    porFuncao: [...porFuncao]
+      .map(([funcao, valores]) => ({ funcao, ...valores }))
+      .sort((a, b) => b.empenhado - a.empenhado),
   });
 });

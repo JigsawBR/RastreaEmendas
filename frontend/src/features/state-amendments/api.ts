@@ -1,5 +1,6 @@
 import { get } from "../../shared/api/http";
 import type { EmendaListItem } from "../../shared/types/amendment";
+import type { FunctionTotal } from "../federal-amendments/api";
 export type StateTotals = {
   valorEmpenhado: number | null;
   valorLiquidado: number | null;
@@ -16,6 +17,7 @@ export type StateSummary = StateTotals & {
   linhasSemListagem: number;
   valorDestinado: number | null;
   taxaExecucao: number | null;
+  porFuncao: FunctionTotal[];
   destinos: {
     emendasComMunicipioBeneficiado: number;
     porDestino: { destino: string; rotulo: string; emendas: number; valorEmpenhadoLiquido: number }[];
@@ -28,6 +30,7 @@ export type StateDestination = {
   destino: string;
   destinoRotulo: string;
   municipioCredor: string | null;
+  codigoIbgeCredor: string | null;
   municipioBeneficiado: string | null;
   codigoIbge: string | null;
   valorEmpenhadoLiquido: number;

@@ -275,6 +275,11 @@ test("API estadual filtra, pagina, exporta e distingue a identidade por exercíc
     assert.match(step.lacuna, /sede/);
     assert.deepEqual(summary.destinos.emendasComMunicipioBeneficiado, 1);
     assert.deepEqual(
+      summary.porFuncao,
+      [{ funcao: "Saúde", empenhado: 100, pago: 30 }, { funcao: "Educação", empenhado: 50, pago: 20 }],
+      "por função usa só a execução das emendas listadas, do maior empenho ao menor",
+    );
+    assert.deepEqual(
       summary.destinos.porDestino.map((d) => [d.destino, d.emendas, d.valorEmpenhadoLiquido]),
       [["municipal_transfer", 1, 100], ["private_nonprofit", 1, 50]],
     );

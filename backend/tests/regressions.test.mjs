@@ -48,7 +48,8 @@ test("query validation, executor filters and missing traceability", async () => 
     assert.deepEqual(exportWhere, expected);
     documents = [
       { destino_recurso: null, nome_favorecido: null, municipio_favorecido: null, valor_documento: null },
-      { destino_recurso: "municipio", nome_favorecido: "Município", municipio_favorecido: null, valor_documento: 0 },
+      { destino_recurso: "municipio", nome_favorecido: "Município", municipio_favorecido: "CAJAZEIRAS", uf_favorecido: "PB", valor_documento: 0 },
+      { destino_recurso: "privado", nome_favorecido: "Fornecedor", municipio_favorecido: "SÃO BENTO", uf_favorecido: "sp", valor_documento: 10 },
     ];
     const destination = await (await get("/emendas/exists/destino")).json();
     const missing = destination.grupos.find(group => group.destino === "nao_informado");
@@ -57,6 +58,10 @@ test("query validation, executor filters and missing traceability", async () => 
     assert.deepEqual(missing.favorecidos, []);
     assert.equal(zero.missingValueCount, 0);
     assert.equal(zero.favorecidos[0].valor, 0);
+    assert.equal(zero.favorecidos[0].codigoIbge, "2503704", "favorecido da PB recebe o código IBGE");
+    const supplier = destination.grupos.find(group => group.destino === "privado").favorecidos[0];
+    assert.equal(supplier.uf, "SP");
+    assert.equal(supplier.codigoIbge, null, "homônimo de outro estado não vai para o mapa da PB");
   } finally {
     await new Promise(resolve => server.close(resolve));
     for (const [model, method, original] of originals) model[method] = original;

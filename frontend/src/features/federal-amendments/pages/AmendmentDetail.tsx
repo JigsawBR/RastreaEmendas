@@ -2,6 +2,9 @@ import { Fragment, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useLocation, useParams } from "react-router-dom";
 import { api } from "../api";
+import type { DestinoResponse, EmendaDetail } from "../api";
+import PlacesMap from "../../territory/PlacesMap";
+import type { OutsidePlace, Place } from "../../territory/PlacesMap";
 import {
   formatBRL,
   formatBRLCompact,
@@ -30,6 +33,33 @@ const descriptions = [
   "Despesa verificada",
   "Desembolso registrado",
 ];
+// Where the money of one amendment is: the CGU locality and the city hall
+// transfers are beneficiaries; other recipients only have a registered seat.
+// Individuals are left out of the map (masked identity, no public relevance).
+function amendmentPlaces(e: EmendaDetail, destination: DestinoResponse | undefined) {
+  const places: Place[] = [];
+  const byLocality = new Map<string, { name: string; value: number }>();
+  for (const a of e.alocacoes) {
+    if (!a.codigoIbge) continue;
+    const locality = byLocality.get(a.codigoIbge) ?? { name: a.localidadeGasto.replace(/ - PB$/, ""), value: 0 };
+    locality.value += a.valorEmpenhado;
+    byLocality.set(a.codigoIbge, locality);
+  }
+  for (const [code, { name, value }] of byLocality)
+    places.push({ code, name, role: "beneficiary", who: "Localidade da emenda", basis: "Alocação da CGU (empenhado)", value });
+  const outside: OutsidePlace[] = [];
+  let people = 0;
+  for (const group of destination?.grupos ?? []) {
+    if (group.destino === "pessoa_fisica") { people += group.favorecidos.length; continue; }
+    for (const f of group.favorecidos) {
+      if (f.codigoIbge)
+        places.push({ code: f.codigoIbge, name: f.municipio, role: group.destino === "municipio" ? "beneficiary" : "seat", who: f.nome, basis: group.rotulo + " (empenho)", value: f.valor });
+      else if (f.uf && f.uf !== "PB")
+        outside.push({ who: f.nome, where: `${f.municipio ?? "Município não informado"} (${f.uf})`, value: f.valor });
+    }
+  }
+  return { places, outside, people };
+}
 export default function EmendaDetail() {
   const { codigo = "" } = useParams();
   const location = useLocation();
@@ -52,6 +82,11 @@ export default function EmendaDetail() {
     queryKey: ["rastr", codigo],
     queryFn: () => api.rastreabilidade(codigo),
   });
+  // Same key as the destination panel below, so the request is shared.
+  const destination = useQuery({
+    queryKey: ["destino", codigo],
+    queryFn: () => api.destinoEmenda(codigo),
+  });
   if (!detail.data)
     return (
       <div className="page-stack">
@@ -65,6 +100,7 @@ export default function EmendaDetail() {
     );
   const e = detail.data;
   const stage = chain.data?.estagios.find((s) => s.estagio === selected);
+  const { places, outside, people } = amendmentPlaces(e, destination.data);
   // The cards come from the CGU allocation of the year; the phases below sum
   // documents of any date. Payments of later years (restos a pagar) make them
   // differ, which reads as an error unless it is said explicitly.
@@ -92,17 +128,17 @@ export default function EmendaDetail() {
       <Link to={backTo}>← Voltar à consulta filtrada</Link>
       <div className="metrics">
         <Metric
-          label="Empenhado"
+          icon="committed" label="Empenhado"
           value={formatBRLCompact(e.valorEmpenhado)}
           context={"Alocação de " + e.ano}
         />
         <Metric
-          label="Liquidado"
+          icon="liquidated" label="Liquidado"
           value={formatBRLCompact(e.valorLiquidado)}
           context={"Alocação de " + e.ano}
         />
         <Metric
-          label="Pago"
+          icon="paid" label="Pago"
           value={formatBRLCompact(e.valorPago)}
           context={
             e.valorEmpenhado > 0
@@ -111,7 +147,7 @@ export default function EmendaDetail() {
           }
         />
         <Metric
-          label="Diferença"
+          icon="difference" label="Diferença"
           value={formatBRLCompact(e.valorEmpenhado - e.valorPago)}
           context="Empenhado − pago"
         />
@@ -132,6 +168,25 @@ export default function EmendaDetail() {
         {e.valorPago > e.valorEmpenhado &&
           " O pago supera o empenhado neste recorte, o que ocorre quando há pagamento de restos de exercícios anteriores."}
       </div>
+      <section className="panel">
+        <h2>Onde está o recurso</h2>
+        <p className="panel-subtitle">
+          Localidade informada pela CGU e municípios dos favorecidos dos empenhos
+        </p>
+        <QueryState loading={destination.isLoading} error={destination.isError} retry={() => void destination.refetch()} />
+        {!destination.isLoading && (
+          <PlacesMap
+            year={e.ano}
+            places={places}
+            outside={outside}
+            note={
+              "Até 10 maiores favorecidos por tipo de destino." +
+              (people > 0 ? ` ${people} pessoa(s) física(s) não aparecem no mapa.` : "") +
+              (e.alocacoes.some((a) => !a.codigoIbge) ? " Localidades como PARAÍBA (UF) ou Nacional não correspondem a um município." : "")
+            }
+          />
+        )}
+      </section>
       <section className="panel">
         <h2>Como o recurso avançou</h2>
         <p className="muted small">

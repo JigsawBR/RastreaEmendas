@@ -148,7 +148,7 @@ test("resumo, cobertura e exercício sem registros", async ({ page }) => {
   await expect(
     page.getByText(/1 linhas de execução sem correspondência/),
   ).toBeVisible();
-  await page.getByRole("link", { name: "Consultar emendas" }).click();
+  await page.getByRole("link", { name: "Ver todas as emendas de 2024" }).click();
   await expect(page.getByLabel("Origem da emenda")).toHaveValue("estadual");
   await page.goto("/emendas?origem=estadual&ano=2023");
   await expect(
@@ -236,4 +236,30 @@ test("ordenação por completude volta à primeira página e ordena o RF-08", as
     rows.map(row => Number(/(\d)\/5/.exec(row.textContent ?? "")?.[1])));
   expect(scores.length).toBeGreaterThan(1);
   expect(scores).toEqual([...scores].sort((a, b) => a - b));
+});
+
+test("exercício padrão é o mais recente e avisa que está em andamento", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.getByLabel("Exercício")).toHaveValue("2026");
+  // The notice depends on the calendar: 2026 is ongoing only while it is 2026.
+  if (new Date().getFullYear() === 2026)
+    await expect(page.getByText(/Exercício 2026 em andamento/)).toBeVisible();
+  await page.goto("/?ano=2024");
+  await expect(page.getByText(/em andamento/)).toHaveCount(0);
+  await page.goto("/municipios");
+  await expect(page.getByLabel("Exercício dos municípios")).toHaveValue("2026");
+});
+
+test("busca da visão geral leva à consulta filtrada e o detalhe mostra onde está o recurso", async ({ page }) => {
+  await page.goto("/?ano=2024");
+  const search = page.getByRole("region", { name: "Encontre uma emenda" });
+  await search.getByLabel("Buscar por").selectOption("municipio");
+  await search.getByLabel("Nome do município").fill("Cajazeiras");
+  await search.getByRole("button", { name: "Buscar" }).click();
+  await expect(page).toHaveURL(/\/emendas\?origem=federal&ano=2024&municipio=Cajazeiras/);
+  await expect(page.getByRole("heading", { name: /emendas encontradas/ })).toBeVisible();
+  await page.goto("/emendas/202499900001");
+  const places = page.locator("section", { has: page.getByRole("heading", { name: "Onde está o recurso" }) });
+  await expect(places.locator(".places-table tbody tr").first()).toBeVisible();
+  await expect(places.getByText(/não indica benefício à cidade|Nenhum município/).first()).toBeVisible();
 });

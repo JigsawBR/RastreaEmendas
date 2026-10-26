@@ -44,7 +44,7 @@ export default function ExecutionComparison({
         />
       )}
       <ValueBar label="Pago" value={paid} max={max} partial={partial?.paid} />
-      <p className="ratio">{ratio}</p>
+      <p className={comparable && committed > 0 ? "ratio" : "ratio ratio-unavailable"}>{ratio}</p>
       <p className="muted small">
         Diferença:{" "}
         {difference === null

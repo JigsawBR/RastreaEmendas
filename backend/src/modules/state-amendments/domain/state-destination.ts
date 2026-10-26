@@ -50,6 +50,7 @@ export function describeDestinations(destinations: StateDestination[]) {
         destino: row.destination,
         destinoRotulo: destinationLabels[row.destination] ?? destinationLabels.other,
         municipioCredor: seat,
+        codigoIbgeCredor: row.creditor_municipality_ibge,
         municipioBeneficiado: municipal ? municipalityName(row.creditor_municipality_ibge) ?? null : null,
         codigoIbge: municipal ? row.creditor_municipality_ibge : null,
         valorEmpenhadoLiquido: Number(row.committed_value ?? 0),

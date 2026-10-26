@@ -1,4 +1,5 @@
 import { prisma } from "../../../../shared/infrastructure/database/prisma.js";
+import { findMunicipalityCode } from "../../../../shared/territory/municipalities.js";
 
 // Rotulos de `documento_despesa.destino_recurso`, classificado no ETL
 // (etl/federal/classify_favorecidos.py) a partir da natureza juridica do favorecido.
@@ -42,8 +43,11 @@ type Grupo = {
   documentos: number;
   missingValueCount: number;
   valor: number;
-  favorecidos: { nome: string; municipio: string | null; valor: number }[];
+  favorecidos: Favorecido[];
 };
+// codigoIbge only for PB: a same-named city in another state must not be
+// drawn on the Paraíba map.
+type Favorecido = { nome: string; municipio: string | null; uf: string | null; codigoIbge: string | null; valor: number };
 
 function rotular(destino: string | null) {
   return DESTINOS[destino as keyof typeof DESTINOS] ?? SEM_CLASSIFICACAO;
@@ -62,12 +66,13 @@ export async function listFundingDestinations(where: { codigo_emenda?: string; a
       destino_recurso: true,
       nome_favorecido: true,
       municipio_favorecido: true,
+      uf_favorecido: true,
       valor_documento: true,
     },
   });
 
   const grupos = new Map<string, Grupo>();
-  const porFavorecido = new Map<string, Map<string, { municipio: string | null; valor: number }>>();
+  const porFavorecido = new Map<string, Map<string, Omit<Favorecido, "nome">>>();
 
   for (const d of documentos) {
     const chave = d.destino_recurso ?? "nao_informado";
@@ -87,7 +92,13 @@ export async function listFundingDestinations(where: { codigo_emenda?: string; a
 
     const nome = d.nome_favorecido ?? "Não informado";
     const favs = porFavorecido.get(chave) ?? new Map();
-    const fav = favs.get(nome) ?? { municipio: d.municipio_favorecido, valor: 0 };
+    const uf = d.uf_favorecido?.trim().toUpperCase() || null;
+    const fav = favs.get(nome) ?? {
+      municipio: d.municipio_favorecido,
+      uf,
+      codigoIbge: uf === "PB" && d.municipio_favorecido ? findMunicipalityCode(d.municipio_favorecido) ?? null : null,
+      valor: 0,
+    };
     fav.valor += Number(d.valor_documento ?? 0);
     favs.set(nome, fav);
     porFavorecido.set(chave, favs);
@@ -95,7 +106,7 @@ export async function listFundingDestinations(where: { codigo_emenda?: string; a
 
   for (const [chave, grupo] of grupos) {
     grupo.favorecidos = Array.from(porFavorecido.get(chave) ?? [])
-      .map(([nome, f]) => ({ nome, municipio: f.municipio, valor: f.valor }))
+      .map(([nome, f]) => ({ nome, ...f }))
       .sort((a, b) => b.valor - a.valor)
       .slice(0, 10);
   }

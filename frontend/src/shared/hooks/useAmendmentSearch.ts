@@ -6,15 +6,16 @@ import type { AmendmentSource } from "../lib/sources";
 import { getAmendmentSource } from "../lib/amendment-source";
 import type { SearchFilters } from "../lib/amendment-source";
 import { readOrder } from "../lib/amendment-order";
+import { DEFAULT_YEAR } from "../lib/years";
 import type { AmendmentOrder } from "../lib/amendment-order";
 const PAGE_SIZE = 20;
 function readFilters(search: URLSearchParams): SearchFilters {
-  const year = search.get("ano") ?? "2024";
+  const year = search.get("ano") ?? String(DEFAULT_YEAR);
   const validYear =
     year === "" ||
     (/^\d+$/.test(year) && Number(year) > 0 && Number(year) <= 9999);
   return {
-    ano: validYear ? year : "2024",
+    ano: validYear ? year : String(DEFAULT_YEAR),
     municipio: search.get("municipio") ?? "",
     beneficiario: search.get("beneficiario") ?? "",
     parlamentar: search.get("parlamentar") ?? "",

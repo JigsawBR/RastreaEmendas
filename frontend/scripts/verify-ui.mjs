@@ -18,6 +18,8 @@ const summary = {
   valorPago: 600000,
   valorRestoInscrito: 0,
   taxaExecucao: 0.6,
+  porFuncao: ["Saúde", "Educação", "Cultura", "Esporte", "Turismo", "Urbanismo", "Defesa", "Ciência"]
+    .map((funcao, i) => ({ funcao, empenhado: 800000 - i * 100000, pago: 100000 })),
 };
 const item = {
   codigoEmenda: "20240001",
@@ -78,7 +80,12 @@ try {
   );
   assert.match(home, /Do compromisso ao pagamento/);
   assert.match(home, /60,0%/, "percentual no formato brasileiro");
-  assert.ok(home.includes("/emendas?ano=2024"));
+  assert.match(home, /Por função/);
+  assert.match(home, /Demais funções \(2\)/, "a cauda de funções é agrupada");
+  assert.ok(!home.includes("Defesa"), "só as seis maiores funções aparecem por nome");
+  assert.match(home, /Encontre uma emenda/);
+  assert.ok(home.includes("/emendas?origem=federal&amp;ano=2024"));
+  assert.ok(home.indexOf("Encontre uma emenda") < home.indexOf("Empenhado"), "a busca vem antes dos indicadores");
   const zero = await render("/src/pages/Home.tsx", "/?ano=2024", (c) =>
     c.setQueryData(["resumo", "federal", 2024], {
       ...summary,
@@ -232,6 +239,15 @@ try {
     valorLiquidado: null,
     valoresAusentes: { empenhado: 1, liquidado: 1, pago: 1 },
     totalLinhasExecucao: 1,
+    porFuncao: [{ funcao: "Saúde", empenhado: null, pago: null }],
+    destinos: {
+      emendasComMunicipioBeneficiado: 1,
+      porDestino: [
+        { destino: "municipal_transfer", rotulo: "", emendas: 1, valorEmpenhadoLiquido: 700 },
+        { destino: "private_nonprofit", rotulo: "", emendas: 1, valorEmpenhadoLiquido: 200 },
+        { destino: "private_for_profit", rotulo: "", emendas: 1, valorEmpenhadoLiquido: 100 },
+      ],
+    },
   };
   const stateHome = await render(
     "/src/pages/Home.tsx",
@@ -242,7 +258,11 @@ try {
   assert.match(stateHome, /Não informado/);
   assert.match(stateHome, /dados ausentes ou parciais/);
   assert.ok(stateHome.includes("origem=estadual"));
-  assert.ok(!stateHome.includes("Explorar o destino dos pagamentos"));
+  assert.ok(!stateHome.includes("Ver os favorecidos de cada destino"), "detalhe de favorecidos é só federal");
+  assert.match(stateHome, /Transferências a municípios/);
+  assert.match(stateHome, /70,0%/, "participação de cada destino na legenda");
+  assert.equal((stateHome.match(/Entidades privadas</g) ?? []).length, 1, "com e sem fins lucrativos se agrupam");
+  assert.ok(stateHome.indexOf("Transferências a municípios") < stateHome.indexOf("Entidades privadas<"), "ordem fixa dos destinos");
   const stateItem = {
     ...item,
     numeroEmenda: "0001/2024",
@@ -309,10 +329,10 @@ try {
         destinos: [
           { credor: "PREFEITURA MUNICIPAL DE CAJAZEIRAS", documentoCredor: "1", modalidadeAplicacao: "40",
             destino: "municipal_transfer", destinoRotulo: "Transferência ao município", municipioCredor: "Cajazeiras",
-            municipioBeneficiado: "Cajazeiras", codigoIbge: "2503704", valorEmpenhadoLiquido: 100, notas: 1 },
+            municipioBeneficiado: "Cajazeiras", codigoIbge: "2503704", codigoIbgeCredor: "2503704", valorEmpenhadoLiquido: 100, notas: 1 },
           { credor: "ASSOCIAÇÃO", documentoCredor: "2", modalidadeAplicacao: "50",
             destino: "private_nonprofit", destinoRotulo: "Entidade privada sem fins lucrativos", municipioCredor: "João Pessoa",
-            municipioBeneficiado: null, codigoIbge: null, valorEmpenhadoLiquido: 50, notas: 2 },
+            municipioBeneficiado: null, codigoIbge: null, codigoIbgeCredor: "2507507", valorEmpenhadoLiquido: 50, notas: 2 },
         ],
         rastreabilidade: {
           avaliavel: false,
@@ -326,7 +346,10 @@ try {
   assert.match(stateDetail, /Não calculável/);
   assert.ok(stateDetail.includes("beneficiario=Hospital&amp;pagina=2"));
   assert.match(stateDetail, /Município beneficiado:<\/strong> Cajazeiras/);
-  assert.match(stateDetail, /Sede do credor, não município beneficiado/);
+  assert.match(stateDetail, /Onde está o recurso/);
+  assert.match(stateDetail, />João Pessoa<\/a>.*Sede do favorecido/s, "sede da entidade aparece com o papel certo");
+  assert.ok(stateDetail.indexOf(">Cajazeiras</a>") < stateDetail.indexOf(">João Pessoa</a>"), "beneficiado antes da sede");
+  assert.match(stateDetail, /não indica benefício à cidade/);
   const stateCoverage = await render(
     "/src/pages/DataSources.tsx",
     "/sobre-os-dados?origem=estadual",
