@@ -105,6 +105,7 @@ export type MunicipiosResponse = {
   ano: number | null;
   items: {
     localidade: string;
+    tipo: "municipio" | "estado" | "multiplo";
     quantidadeEmendas: number;
     valorEmpenhado: number;
     valorLiquidado: number;
@@ -135,7 +136,38 @@ export type DestinoResponse = {
   }[];
 };
 
+/** Amendment spanning several states; only what PB recipients received is PB's. */
+export type EmendaNacional = {
+  codigoEmenda: string;
+  ano: number;
+  tipoEmenda: string | null;
+  nomeAutor: string | null;
+  numeroEmenda: string | null;
+  localidades: string;
+  funcoes: string;
+  /** Whole amendment, every state: context only, never a PB figure. */
+  valorEmpenhadoTotal: number;
+  valorPagoTotal: number;
+  recebidoEntes: number;
+  recebidoPrivados: number;
+  municipios: number;
+};
+
+export type EmendasNacionaisResponse = {
+  ano: number | null;
+  totalEmendas: number;
+  recebidoEntes: number;
+  recebidoPrivados: number;
+  items: EmendaNacional[];
+};
+
+export type EmendaNacionalDetail = EmendaNacional & {
+  favorecidos: { nome: string; natureza: string | null; esfera: "municipal" | "estadual" | "privado"; municipio: string | null; codigoIbge: string | null; valor: number }[];
+};
+
 export const api = {
+  nacionais: (ano?: number) => get<EmendasNacionaisResponse>(`/emendas-nacionais${ano ? `?ano=${ano}` : ""}`),
+  nacional: (codigo: string) => get<EmendaNacionalDetail>(`/emendas-nacionais/${encodeURIComponent(codigo)}`),
   resumo: (ano?: number) => get<Resumo>(`/resumo${ano ? `?ano=${ano}` : ""}`),
   destino: (ano?: number) => get<DestinoResponse>(`/resumo/destino${ano ? `?ano=${ano}` : ""}`),
   destinoEmenda: (codigo: string) => get<DestinoResponse>(`/emendas/${codigo}/destino`),

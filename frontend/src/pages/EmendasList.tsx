@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
 import { useAmendmentSearch } from "../shared/hooks/useAmendmentSearch";
 import { loadGeography } from "../features/territory/api";
 import { amendmentOrders } from "../shared/lib/amendment-order";
@@ -203,6 +204,14 @@ export default function EmendasList() {
         registros não comprova ausência de emendas na fonte.
         {source === "estadual" &&
           " Fonte: CODATA. O beneficiário não é tratado como município. Os totais refletem as linhas de execução que correspondem aos filtros; o detalhe mostra a execução completa da emenda."}
+        {source === "federal" && (
+          <>
+            {" "}Emendas aplicadas em vários estados, como as de comissão, ficam fora desta lista.{" "}
+            <Link to={"/emendas-nacionais" + (draft.ano ? "?ano=" + draft.ano : "")}>
+              Ver as emendas nacionais com recurso na Paraíba →
+            </Link>
+          </>
+        )}
       </div>
     </div>
   );

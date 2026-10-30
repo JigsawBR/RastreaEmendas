@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { getAmendmentSource, isStateSummary } from "../shared/lib/amendment-source";
 import type { AmendmentSummary } from "../shared/lib/amendment-source";
 import SourceSelector from "../shared/components/SourceSelector";
@@ -91,6 +91,11 @@ export default function Home() {
   const destination = useQuery({
     queryKey: ["destino", year],
     queryFn: () => api.destino(year),
+    enabled: source === "federal",
+  });
+  const national = useQuery({
+    queryKey: ["emendas-nacionais", year],
+    queryFn: () => api.nacionais(year),
     enabled: source === "federal",
   });
   const data = query.data;
@@ -191,10 +196,23 @@ export default function Home() {
           </div>
         </>
       )}
+      {source === "federal" && national.data && national.data.totalEmendas > 0 && (
+        <section className="panel national-callout">
+          <div>
+            <h2>Além do recorte: emendas nacionais</h2>
+            <p className="muted small">
+              {formatInt(national.data.totalEmendas)} emendas aplicadas em vários estados repassaram{" "}
+              <strong>{formatBRLCompact(national.data.recebidoEntes)}</strong> a prefeituras e ao governo da
+              Paraíba em {year}. Esse valor não está somado aos indicadores acima.
+            </p>
+          </div>
+          <Link className="button secondary" to={`/emendas-nacionais?ano=${year}`}>Ver emendas nacionais</Link>
+        </section>
+      )}
       <div className="notice">
         {source === "estadual"
           ? "Fonte: CODATA — Dados Abertos da Paraíba · Execução vinculada por ano e número da emenda"
-          : "Fonte: Portal da Transparência (CGU) · Alocações com localidade explícita na Paraíba"}{" "}
+          : "Fonte: Portal da Transparência (CGU) · Alocações aplicadas na Paraíba: um município, o Estado ou vários municípios"}{" "}
         · Exercício {year}. Ausência de registro não significa ausência de gasto.
         {stateSummary && stateSummary.emendasSemExecucao > 0 &&
           " " + stateSummary.emendasSemExecucao + " emendas da listagem sem execução vinculada; totais com cobertura parcial."}

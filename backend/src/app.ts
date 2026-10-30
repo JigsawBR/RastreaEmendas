@@ -7,6 +7,7 @@ import { analyticsRouter } from "./modules/federal-amendments/analytics/http/sum
 import { executionRouter } from "./modules/federal-amendments/execution/http/execution.router.js";
 import { exportRouter } from "./modules/federal-amendments/exports/http/export.router.js";
 import { municipalitiesRouter } from "./modules/federal-amendments/locations/http/municipalities.router.js";
+import { nationalAmendmentsRouter } from "./modules/federal-amendments/national/http/national-amendments.router.js";
 import { organizationsRouter } from "./modules/federal-amendments/organizations/http/organizations.router.js";
 import { parliamentariansRouter } from "./modules/federal-amendments/parliamentarians/http/parliamentarians.router.js";
 import { traceabilityRouter } from "./modules/federal-amendments/traceability/http/traceability.router.js";
@@ -43,6 +44,7 @@ export function buildApp() {
   app.use("/emendas", amendmentsRouter);
   app.use("/emendas", executionRouter);
   app.use("/emendas", traceabilityRouter);
+  app.use("/emendas-nacionais", nationalAmendmentsRouter);
   app.use("/municipios", municipalitiesRouter);
   app.use("/municipios", municipalityMapRouter);
   app.use("/parlamentares", parliamentariansRouter);

@@ -180,6 +180,49 @@ class Favorecido(Base):
     valor_recebido: Mapped[Decimal | None] = mapped_column(Numeric(15, 2))
 
 
+class EmendaNacional(Base):
+    """Emenda aplicada em varias UFs com parte recebida por entes da PB.
+
+    Fica fora de `emenda` de proposito: os valores aqui sao os da emenda inteira
+    (todas as UFs, do arquivo aberto) e somados aos da PB inflariam os totais.
+    A parte da PB e o que os favorecidos receberam (`emenda_nacional_destino`).
+    Ver etl.federal.abrangencia.
+    """
+
+    __tablename__ = "emenda_nacional"
+
+    codigo_emenda: Mapped[str] = mapped_column(String(20), primary_key=True)
+    ano: Mapped[int] = mapped_column(Integer, index=True)
+    tipo_emenda: Mapped[str | None] = mapped_column(String(80))
+    nome_autor: Mapped[str | None] = mapped_column(String(120), index=True)
+    numero_emenda: Mapped[str | None] = mapped_column(String(10))
+    localidades: Mapped[str] = mapped_column(String(200))
+    funcoes: Mapped[str] = mapped_column(String(200))
+    valor_empenhado_total: Mapped[Decimal] = mapped_column(Numeric(17, 2))
+    valor_pago_total: Mapped[Decimal] = mapped_column(Numeric(17, 2))
+
+
+class EmendaNacionalDestino(Base):
+    """Favorecido da PB de uma emenda nacional, somado em todos os meses.
+
+    esfera vem da natureza juridica: so "municipal" e "estadual" contam como
+    recurso destinado a PB; "privado" e a sede de quem recebeu, nao o destino.
+    """
+
+    __tablename__ = "emenda_nacional_destino"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    codigo_emenda: Mapped[str] = mapped_column(String(20), index=True)
+    ano: Mapped[int] = mapped_column(Integer, index=True)
+    codigo_favorecido: Mapped[str] = mapped_column(String(20))
+    nome_favorecido: Mapped[str | None] = mapped_column(String(200))
+    natureza_juridica: Mapped[str | None] = mapped_column(String(120))
+    esfera: Mapped[str] = mapped_column(String(20))
+    municipio_favorecido: Mapped[str | None] = mapped_column(String(120))
+    codigo_ibge: Mapped[str | None] = mapped_column(String(7), index=True)
+    valor_recebido: Mapped[Decimal] = mapped_column(Numeric(15, 2))
+
+
 class TransferegovPlanoAcao(Base):
     """Plano de acao especial (Transferegov). Grao: id_plano_acao.
 

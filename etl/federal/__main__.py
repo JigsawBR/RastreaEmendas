@@ -7,8 +7,10 @@ from decimal import Decimal
 
 from sqlalchemy import text
 
+from etl.federal.abrangencia import is_multiplo_na_uf, multiplo_na_uf
 from etl.federal.api_client import PortalClient
 from etl.federal.extract import VALOR_FIELDS, fetch_documentos, fetch_emenda, fetch_emendas, grain
+from etl.federal.opendata import download_emendas_zip, read_emendas
 from etl.shared.load import get_engine, init_db, upsert_rows
 from etl.shared.models import DocumentoDespesa, Emenda, EmendaAlocacao
 from etl.federal.transform import (
@@ -96,13 +98,20 @@ def revalidate_valores(client: PortalClient, year: int, rows: list[dict], *, ref
     return revalidadas
 
 
-def run_year(client: PortalClient, engine, year: int, uf: str, skip_documentos: bool, *, refresh: bool = False) -> None:
+def run_year(
+    client: PortalClient, engine, year: int, uf: str, skip_documentos: bool,
+    multiplo: set[tuple[str, str, str]], *, refresh: bool = False,
+) -> None:
     uf_nome = UF_NOMES[uf]
     raw_rows = fetch_emendas(client, year, refresh=refresh)
     uf_rows = [
         r for r in raw_rows
-        if is_localidade_uf(r.get("localidadeDoGasto"), uf, uf_nome)
+        if is_localidade_uf(r.get("localidadeDoGasto"), uf, uf_nome) or is_multiplo_na_uf(r, multiplo)
     ]
+    logger.info(
+        "Year %d: %d linhas MÚLTIPLO aplicadas so na %s (arquivo aberto)",
+        year, sum(r.get("localidadeDoGasto") == "MÚLTIPLO" for r in uf_rows), uf,
+    )
 
     uf_rows = revalidate_valores(client, year, uf_rows, refresh=refresh)
 
@@ -177,8 +186,11 @@ def main() -> None:
     engine = get_engine()
     init_db(engine)
 
+    # a API devolve "MÚLTIPLO" sem UF; o arquivo aberto diz quais dessas linhas
+    # sao aplicadas inteiras na UF (ver etl.federal.abrangencia)
+    multiplo = multiplo_na_uf(read_emendas(download_emendas_zip(refresh=args.refresh)), UF_NOMES[args.uf])
     for year in parse_years(args.years):
-        run_year(client, engine, year, args.uf, args.skip_documentos, refresh=args.refresh)
+        run_year(client, engine, year, args.uf, args.skip_documentos, multiplo, refresh=args.refresh)
 
 
 if __name__ == "__main__":

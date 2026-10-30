@@ -1,16 +1,18 @@
 import { Router } from "express";
-import { pbLocalidadeFilter } from "../../amendments/infrastructure/amendment-filters.js";
+import { PB_MULTIPLE_BUCKET, PB_STATE_BUCKET as UF_BUCKET, pbLocalidadeFilter } from "../../amendments/infrastructure/amendment-filters.js";
 import { prisma } from "../../../../shared/infrastructure/database/prisma.js";
 
 export const municipalitiesRouter = Router();
 
-const UF_BUCKET = "PARAÍBA (UF)";
-
-// "CAMPINA GRANDE - PB" -> "CAMPINA GRANDE"; "PARAÍBA (UF)" -> bucket estadual
+// "CAMPINA GRANDE - PB" -> "CAMPINA GRANDE"; "PARAÍBA (UF)" e "MÚLTIPLO"
+// ficam como estao, porque nao sao municipios
 function normalizeLocalidade(localidade: string): string {
-  if (localidade === UF_BUCKET) return UF_BUCKET;
+  if (localidade === UF_BUCKET || localidade === PB_MULTIPLE_BUCKET) return localidade;
   return localidade.replace(/ - PB$/, "");
 }
+
+const tipoLocalidade = (localidade: string) =>
+  localidade === UF_BUCKET ? "estado" : localidade === PB_MULTIPLE_BUCKET ? "multiplo" : "municipio";
 
 // Transferegov usa "MUNICIPIO DE JOAO PESSOA" (sem acento) ou o nome puro
 function normalizeBeneficiario(nome: string): string {
@@ -151,6 +153,7 @@ municipalitiesRouter.get("/", async (req, res) => {
   const items = Array.from(map.values())
     .map((m) => ({
       localidade: m.localidade,
+      tipo: tipoLocalidade(m.localidade),
       quantidadeEmendas: m.emendas.size,
       valorEmpenhado: m.valorEmpenhado,
       valorLiquidado: m.valorLiquidado,

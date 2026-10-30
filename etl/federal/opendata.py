@@ -17,15 +17,15 @@ UA = {"User-Agent": "RastreaEmendas/1.0 (TCC IFPB)"}
 OPENZIP_DIR = config.RAW_DATA_DIR / "openzip"
 
 
-def download_emendas_zip() -> Path:
+def download_emendas_zip(*, refresh: bool = False) -> Path:
     """Baixa o arquivo aberto de Emendas Parlamentares.
 
     O endpoint ignora o {ano} da URL e sempre devolve o mesmo arquivo
-    historico (todos os anos), entao baixamos uma unica vez.
+    historico (todos os anos), entao baixamos uma unica vez por carga.
     """
     OPENZIP_DIR.mkdir(parents=True, exist_ok=True)
     local = OPENZIP_DIR / "emendas_parlamentares.zip"
-    if local.exists() and local.stat().st_size > 0:
+    if not refresh and local.exists() and local.stat().st_size > 0:
         logger.info("Emendas zip: cached (%d bytes)", local.stat().st_size)
         return local
     # o path da URL exige um ano, mas o payload independe dele
@@ -37,8 +37,17 @@ def download_emendas_zip() -> Path:
 
 
 def read_por_favorecido(zip_path: Path) -> pd.DataFrame:
+    return _read_csv(zip_path, "EmendasParlamentares_PorFavorecido.csv")
+
+
+def read_emendas(zip_path: Path) -> pd.DataFrame:
+    """Uma linha por emenda x localidade x municipio x acao, com a UF de aplicacao."""
+    return _read_csv(zip_path, "EmendasParlamentares.csv")
+
+
+def _read_csv(zip_path: Path, name: str) -> pd.DataFrame:
     with zipfile.ZipFile(zip_path) as zf:
-        with zf.open("EmendasParlamentares_PorFavorecido.csv") as fh:
+        with zf.open(name) as fh:
             wrapped = TextIOWrapper(fh, encoding="latin-1", newline="")
             return pd.read_csv(wrapped, sep=";", dtype=str, keep_default_na=False)
 

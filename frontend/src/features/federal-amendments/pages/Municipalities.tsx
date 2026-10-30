@@ -16,11 +16,12 @@ export default function Municipios() {
     queryFn: () => api.municipios(ano),
   });
 
-  // A linha estadual nao e um municipio e vale ordens de grandeza mais que
-  // qualquer um deles: deixada na tabela, ela achata todas as barras e passa a
-  // impressao de que o dinheiro "sumiu" num lugar sem nome.
-  const estadual = data?.items.find((i) => i.localidade.includes("(UF)"));
-  const municipios = data?.items.filter((i) => !i.localidade.includes("(UF)")) ?? [];
+  // As linhas estadual e "MÚLTIPLO" nao sao municipios e valem ordens de
+  // grandeza mais que qualquer um deles: deixadas na tabela, achatam todas as
+  // barras e passam a impressao de que o dinheiro "sumiu" num lugar sem nome.
+  const estadual = data?.items.find((i) => i.tipo === "estado");
+  const multiplo = data?.items.find((i) => i.tipo === "multiplo");
+  const municipios = data?.items.filter((i) => i.tipo === "municipio") ?? [];
 
   const maxValor = Math.max(
     ...municipios.map((i) =>
@@ -64,6 +65,24 @@ export default function Municipios() {
             municipal explícita neste endpoint.
             Essa classificação não identifica, sozinha, quem executou a despesa ou
             quais cidades foram atendidas. Consulte os documentos de cada emenda.
+          </p>
+        </div>
+      )}
+
+      {multiplo && multiplo.quantidadeEmendas > 0 && (
+        <div className="bg-sky-50 border border-sky-200 rounded-lg p-4 mb-4">
+          <div className="flex items-baseline justify-between gap-4 flex-wrap">
+            <h2 className="font-semibold text-sky-900">Repartida entre vários municípios da Paraíba</h2>
+            <span className="text-lg font-semibold text-sky-900">
+              {formatBRL(multiplo.valorEmpenhado)} empenhados
+            </span>
+          </div>
+          <p className="text-sm text-sky-900/80 mt-2">
+            {formatInt(multiplo.quantidadeEmendas)} emendas do exercício {ano} têm a
+            localidade registrada como &ldquo;MÚLTIPLO&rdquo;. O arquivo aberto da CGU
+            confirma que todo o valor foi aplicado na Paraíba, mas não diz em quais
+            municípios. No detalhe de cada emenda, eles aparecem pelas prefeituras e
+            fundos municipais que receberam os empenhos.
           </p>
         </div>
       )}

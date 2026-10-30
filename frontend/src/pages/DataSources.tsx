@@ -63,7 +63,8 @@ export default function DataSources() {
           <h2>Portal da Transparência</h2>
           <p className="muted">
             Identidade, alocações e documentos de despesa. Recorte da Paraíba
-            identificado na localidade do gasto.
+            identificado na localidade do gasto e, para as emendas
+            &ldquo;MÚLTIPLO&rdquo;, na UF de aplicação do arquivo aberto.
           </p>
           <p className="muted small">Última carga: data não registrada.</p>
         </section>
@@ -95,9 +96,14 @@ export default function DataSources() {
       </div>
       <div className="notice">
         Exercícios previstos: 2023 a 2026. Cobertura e atualização devem ser
-        confirmadas por fonte. Na base federal, Nacional e MÚLTIPLO não permitem
-        atribuição automática à Paraíba. Na base estadual, o beneficiário não é
-        tratado como município.
+        confirmadas por fonte. Na base federal, a API registra como
+        &ldquo;MÚLTIPLO&rdquo; emendas repartidas entre vários municípios, sem dizer
+        a UF; o arquivo aberto da CGU diz, e as aplicadas inteiras na Paraíba
+        entram na consulta. Emendas aplicadas em vários estados (Nacional, ou
+        MÚLTIPLO em mais de uma UF) não entram nos totais: a parte da Paraíba
+        aparece em <Link to="/emendas-nacionais">Emendas nacionais</Link>, pelo
+        que prefeituras e o Estado receberam. Na base estadual, o beneficiário
+        não é tratado como município.
       </div>
       <section className="panel">
         <h2>
@@ -108,8 +114,7 @@ export default function DataSources() {
           onChange={(value) => setSearch({ origem: value })}
         />
         <p className="muted small">
-          Quantidade de emendas com localidade explícita na Paraíba presentes na
-          base. Presença de registros não garante cobertura integral da fonte.
+          Quantidade de emendas aplicadas na Paraíba presentes na base. Presença de registros não garante cobertura integral da fonte.
         </p>
         <QueryState
           loading={coverage.isLoading}

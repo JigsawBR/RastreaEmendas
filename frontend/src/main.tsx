@@ -8,6 +8,7 @@ import Home from "./pages/Home.tsx";
 import EmendasList from "./pages/EmendasList.tsx";
 import EmendaDetail from "./features/federal-amendments/pages/AmendmentDetail.tsx";
 import Municipios from "./features/federal-amendments/pages/Municipalities.tsx";
+import NationalAmendments from "./features/federal-amendments/pages/NationalAmendments.tsx";
 import DataSources from "./pages/DataSources.tsx";
 import StateAmendmentDetail from "./features/state-amendments/pages/StateAmendmentDetail.tsx";
 
@@ -26,6 +27,7 @@ createRoot(document.getElementById("root")!).render(
             <Route index element={<Home />} />
             <Route path="emendas" element={<EmendasList />} />
             <Route path="emendas/:codigo" element={<EmendaDetail />} />
+            <Route path="emendas-nacionais" element={<NationalAmendments />} />
             <Route
               path="emendas-estaduais/:ano/:numero"
               element={<StateAmendmentDetail />}

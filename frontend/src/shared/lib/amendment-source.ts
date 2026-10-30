@@ -7,6 +7,7 @@ import type {
   StateListResponse,
 } from "../../features/state-amendments/api";
 import type { AmendmentSource } from "./sources";
+import { formatLocality } from "./format";
 export type AmendmentItem = EmendaListItem | StateAmendmentItem;
 export type AmendmentSummary = Resumo | StateSummary;
 export type FilterKey =
@@ -85,7 +86,7 @@ const strategies: Record<AmendmentSource, AmendmentSourceStrategy> = {
     summary: (year) => api.resumo(year),
     exportUrl: (params) => api.exportEmendasUrl(params),
     detailUrl: (item) => "/emendas/" + encodeURIComponent(item.codigoEmenda),
-    destination: (item) => item.localidades.join(", ") || "Não informada",
+    destination: (item) => item.localidades.map(formatLocality).join(", ") || "Não informada",
   },
   estadual: {
     id: "estadual",

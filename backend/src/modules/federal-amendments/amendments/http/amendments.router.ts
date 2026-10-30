@@ -56,7 +56,7 @@ amendmentsRouter.get("/:codigo", async (req, res) => {
     valorRestoInscrito: restoInscrito,
     alocacoes: emenda.emenda_alocacao.map((alocacao) => ({
       localidadeGasto: alocacao.localidade_gasto,
-      // Only "CITY - PB" is a municipality; "PARAÍBA (UF)" and "Nacional" are not.
+      // Only "CITY - PB" is a municipality; "PARAÍBA (UF)" and "MÚLTIPLO" are not.
       codigoIbge: / - PB$/.test(alocacao.localidade_gasto)
         ? findMunicipalityCode(alocacao.localidade_gasto) ?? null
         : null,

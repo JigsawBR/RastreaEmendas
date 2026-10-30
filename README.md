@@ -63,8 +63,15 @@ python -m etl.state --years 2023-2026
 python -m etl.state --years 2023-2026 --refresh
 python -m etl.federal.enrich_documentos --years 2023
 python -m etl.federal.load_favorecidos --years 2023
+python -m etl.federal.load_nacionais --years 2023-2026
 python -m etl.federal.load_despesas --years 2023
 ```
+
+A carga federal lê também o arquivo aberto de emendas da CGU para incluir as
+emendas "MÚLTIPLO" aplicadas inteiras na Paraíba; `--refresh` baixa esse arquivo
+de novo. `load_nacionais` roda depois de `load_favorecidos` e guarda à parte as
+emendas aplicadas em vários estados, com o que entes da Paraíba receberam
+(ver [docs/emendas-multiplo-nacionais.md](docs/emendas-multiplo-nacionais.md)).
 
 A primeira execução federal reutiliza o cache disponível. `--refresh` consulta
 novamente listagens, detalhes de emendas e documentos; só substitui cada arquivo

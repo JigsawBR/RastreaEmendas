@@ -50,7 +50,7 @@ RastreaEmendas/
 - Estaduais: `backend/src/modules/state-amendments/`, `frontend/src/features/state-amendments/` e `etl/state/`.
 - Código usado por ambas as origens: pastas `shared/` de cada componente. Os modelos ORM do ETL ficam reunidos em `etl/shared/models.py`, pois definem o contrato integrado do banco.
 
-No back-end federal, cada capacidade mantém as camadas `application`, `domain`, `http` e `infrastructure` que utiliza. Os endereços HTTP continuam iguais: `/emendas`, `/resumo`, `/municipios` e `/estaduais/...`.
+No back-end federal, cada capacidade mantém as camadas `application`, `domain`, `http` e `infrastructure` que utiliza. Os endereços HTTP continuam iguais: `/emendas`, `/resumo`, `/municipios` e `/estaduais/...`. As emendas aplicadas em vários estados ficam em `/emendas-nacionais`, fora dos totais da Paraíba.
 
 ## Executar o ETL
 
@@ -64,6 +64,7 @@ python -m etl.state --years 2023-2026 --refresh
 python -m etl.federal.load_transferegov --years 2023-2026
 python -m etl.federal.enrich_documentos --years 2023
 python -m etl.federal.load_favorecidos --years 2023
+python -m etl.federal.load_nacionais --years 2023-2026
 python -m etl.federal.load_despesas --years 2023
 python -m etl.federal.load_ugs
 python -m etl.federal.classify_favorecidos

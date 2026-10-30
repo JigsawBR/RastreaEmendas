@@ -836,6 +836,21 @@ p {
   display: block;
 }
 /* Overview search: title on the left, one-field form on the right. */
+/* Amendments outside the PB totals, pointed to without mixing their values in. */
+.national-callout {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+  align-items: center;
+  justify-content: space-between;
+}
+.national-callout h2 {
+  margin: 0 0 4px;
+}
+.national-callout p {
+  margin: 0;
+  max-width: 72ch;
+}
 .quick-search {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);

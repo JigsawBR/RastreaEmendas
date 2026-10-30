@@ -180,6 +180,38 @@ model emenda {
   @@index([nome_autor], map: "ix_emenda_nome_autor")
 }
 
+model emenda_nacional {
+  codigo_emenda         String  @id @db.VarChar(20)
+  ano                   Int
+  tipo_emenda           String? @db.VarChar(80)
+  nome_autor            String? @db.VarChar(120)
+  numero_emenda         String? @db.VarChar(10)
+  localidades           String  @db.VarChar(200)
+  funcoes               String  @db.VarChar(200)
+  valor_empenhado_total Decimal @db.Decimal(17, 2)
+  valor_pago_total      Decimal @db.Decimal(17, 2)
+
+  @@index([ano], map: "ix_emenda_nacional_ano")
+  @@index([nome_autor], map: "ix_emenda_nacional_nome_autor")
+}
+
+model emenda_nacional_destino {
+  id                   Int     @id @default(autoincrement())
+  codigo_emenda        String  @db.VarChar(20)
+  ano                  Int
+  codigo_favorecido    String  @db.VarChar(20)
+  nome_favorecido      String? @db.VarChar(200)
+  natureza_juridica    String? @db.VarChar(120)
+  esfera               String  @db.VarChar(20)
+  municipio_favorecido String? @db.VarChar(120)
+  codigo_ibge          String? @db.VarChar(7)
+  valor_recebido       Decimal @db.Decimal(15, 2)
+
+  @@index([codigo_emenda], map: "ix_emenda_nacional_destino_codigo_emenda")
+  @@index([ano], map: "ix_emenda_nacional_destino_ano")
+  @@index([codigo_ibge], map: "ix_emenda_nacional_destino_codigo_ibge")
+}
+
 model emenda_alocacao {
   id                    Int      @id @default(autoincrement())
   codigo_emenda         String   @db.VarChar(20)

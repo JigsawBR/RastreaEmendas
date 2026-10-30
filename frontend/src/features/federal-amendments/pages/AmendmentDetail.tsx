@@ -9,6 +9,7 @@ import {
   formatBRL,
   formatBRLCompact,
   formatDate,
+  formatLocality,
   formatPct,
 } from "../../../shared/lib/format";
 import {
@@ -182,7 +183,9 @@ export default function EmendaDetail() {
             note={
               "Até 10 maiores favorecidos por tipo de destino." +
               (people > 0 ? ` ${people} pessoa(s) física(s) não aparecem no mapa.` : "") +
-              (e.alocacoes.some((a) => !a.codigoIbge) ? " Localidades como PARAÍBA (UF) ou Nacional não correspondem a um município." : "")
+              (e.alocacoes.some((a) => a.localidadeGasto === "MÚLTIPLO")
+                ? " A CGU registra esta emenda como repartida entre vários municípios da PB, sem nomeá-los; os municípios vêm das prefeituras e fundos que receberam os empenhos."
+                : e.alocacoes.some((a) => !a.codigoIbge) ? " Localidades como PARAÍBA (UF) não correspondem a um município." : "")
             }
           />
         )}
@@ -405,7 +408,7 @@ export default function EmendaDetail() {
         </p>
         <p className="muted small">
           Localidades:{" "}
-          {[...new Set(e.alocacoes.map((a) => a.localidadeGasto))].join(", ") ||
+          {[...new Set(e.alocacoes.map((a) => formatLocality(a.localidadeGasto)))].join(", ") ||
             "Não informadas"}
         </p>
         <DestinoDoDinheiro codigoEmenda={codigo} />

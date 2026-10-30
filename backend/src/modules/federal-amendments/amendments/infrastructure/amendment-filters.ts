@@ -18,14 +18,19 @@ export async function executorFilter(orgao?: string): Promise<Prisma.emendaWhere
   } } };
 }
 
+export const PB_STATE_BUCKET = "PARAÍBA (UF)";
+// The ETL only stores a "MÚLTIPLO" row when the open data places it entirely in
+// PB (several municipalities, none named by the API); see etl.federal.abrangencia.
+export const PB_MULTIPLE_BUCKET = "MÚLTIPLO";
+
 // Filtro reutilizavel para restringir alocacoes ao estado da PB.
-// Localidades vem como "MUNICIPIO - PB" ou "PARAIBA (UF)"; ha tambem
-// "Nacional"/"MULTIPLO" que nao sao atribuiveis a UF alguma.
+// Localidades vem como "MUNICIPIO - PB", "PARAIBA (UF)" ou "MÚLTIPLO".
 export function pbLocalidadeFilter(): Prisma.emenda_alocacaoWhereInput {
   return {
     OR: [
       { localidade_gasto: { endsWith: " - PB" } },
-      { localidade_gasto: "PARAÍBA (UF)" },
+      { localidade_gasto: PB_STATE_BUCKET },
+      { localidade_gasto: PB_MULTIPLE_BUCKET },
     ],
   };
 }

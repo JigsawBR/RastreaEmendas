@@ -225,6 +225,39 @@ try {
         [2023, 2024, 2025, 2026].map((year) => ({ year, summary })),
       ),
   );
+  const nationalItem = {
+    codigoEmenda: "202650410002", ano: 2024, tipoEmenda: "Emenda de Comissão", nomeAutor: "COM. DA SAUDE",
+    numeroEmenda: "0002", localidades: "MÚLTIPLO", funcoes: "Saúde", valorEmpenhadoTotal: 1456477433,
+    valorPagoTotal: 1000, recebidoEntes: 116950387, recebidoPrivados: 0, municipios: 223,
+  };
+  const nationalList = { ano: 2024, totalEmendas: 1, recebidoEntes: 116950387, recebidoPrivados: 0, items: [nationalItem] };
+  const national = await render(
+    "/src/features/federal-amendments/pages/NationalAmendments.tsx",
+    "/emendas-nacionais?ano=2024",
+    (c) => c.setQueryData(["emendas-nacionais", 2024], nationalList),
+  );
+  assert.match(national, /não entram nos totais da Paraíba/);
+  assert.match(national, /R\$\s116\.950\.387,00/, "valor recebido na PB");
+  assert.match(national, /Empenhado em todas as UFs/, "o valor da emenda inteira é só contexto");
+  assert.ok(national.indexOf("RECEBIDO NA PB") < national.indexOf("EMENDA INTEIRA"));
+  const homeNational = await render("/src/pages/Home.tsx", "/?ano=2024", (c) => {
+    c.setQueryData(["resumo", "federal", 2024], summary);
+    c.setQueryData(["emendas-nacionais", 2024], nationalList);
+  });
+  assert.match(homeNational, /Além do recorte: emendas nacionais/);
+  assert.match(homeNational, /não está somado aos indicadores acima/);
+  assert.ok(homeNational.includes("/emendas-nacionais?ano=2024"));
+  const multiple = await render(
+    "/src/pages/EmendasList.tsx",
+    "/emendas?origem=federal&ano=2024",
+    (c) => c.setQueryData(
+      ["emendas", "federal", { ano: 2024, parlamentar: undefined, municipio: undefined, funcao: undefined, orgao: undefined, limit: 20, offset: 0 }],
+      { items: [{ ...item, localidades: ["MÚLTIPLO"] }], total: 1, limit: 20, offset: 0 },
+    ),
+  );
+  assert.match(multiple, /Vários municípios da PB/, "MÚLTIPLO não aparece cru na lista");
+  assert.match(multiple, /Ver as emendas nacionais com recurso na Paraíba/);
+
   assert.match(sources, /Preparar atualização/);
   assert.match(sources, /não inicia uma carga no servidor/);
   assert.match(sources, /data não registrada/);

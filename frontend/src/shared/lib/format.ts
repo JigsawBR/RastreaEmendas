@@ -31,6 +31,12 @@ export function formatInt(v: number | null | undefined): string {
   return new Intl.NumberFormat("pt-BR").format(v);
 }
 
+// The CGU writes "MÚLTIPLO" for an amendment split among several PB
+// municipalities; the base only keeps it when it is entirely in Paraíba.
+export function formatLocality(locality: string): string {
+  return locality === "MÚLTIPLO" ? "Vários municípios da PB" : locality;
+}
+
 export function formatDate(iso: string | null | undefined): string {
   if (!iso) return "—";
   const d = new Date(iso);

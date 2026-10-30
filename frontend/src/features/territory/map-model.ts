@@ -17,7 +17,7 @@ export const indicators: Record<string, Indicator> = {
   alocacoes: {
     label: "Federal · alocações por município", unit: "empenhados", ramp: "federal",
     value: (item) => item.federal.empenhado,
-    note: "Empenhado nas alocações da CGU que informam o município. A maior parte do valor federal está registrada como PARAÍBA (UF) e não aparece aqui.",
+    note: "Empenhado nas alocações da CGU que informam o município. A maior parte do valor federal está registrada como PARAÍBA (UF) ou repartida entre vários municípios sem nomeá-los (MÚLTIPLO) e não aparece aqui.",
   },
   despesa: {
     label: "Federal · execução mensal", unit: "empenhados", ramp: "federal",
